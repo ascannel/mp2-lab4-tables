@@ -2,8 +2,16 @@
 #include <vector>
 
 template<typename KeyType, typename ValueType>
+class BaseTable;
+
+template<typename KeyType, typename ValueType>
+class SimpleTable;
+
+template<typename KeyType, typename ValueType>
 class Iterator : public std::iterator<std::input_iterator_tag, ValueType>
 {
+    friend class BaseTable<KeyType, ValueType>;
+    friend class SimpleTable<KeyType, ValueType>;
 private:
     Iterator() {}
     Iterator(std::pair<KeyType, ValueType>* ptr) : p(ptr) {}
