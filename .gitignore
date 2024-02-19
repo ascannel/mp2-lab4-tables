@@ -40,6 +40,11 @@
 
 # Folders
 build/Debug/
+build/bin/
+build/gtest/
+build/lib/
+build/samples/
+build/test/
 build/x64/
 build/CMakeFiles/
 build/mp2-lab4_tables.dir/
