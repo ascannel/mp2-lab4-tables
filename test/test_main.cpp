@@ -1,14 +1,7 @@
-#include "table.hpp"
-#include <iostream>
+#include <gtest.h>
 
-using namespace std;
-
-int main() {
-    SimpleTable<int, int> table;
-    table.insert(1, 2);
-    table.insert(2, 3);
-    auto res = table.find(1);
-    cout << *res << endl;
-    cout << table.getSize() << endl;
-    vector<int> t;
+int main(int argc, char** argv)
+{
+	::testing::InitGoogleTest(&argc, argv);
+	return RUN_ALL_TESTS();
 }

@@ -34,7 +34,7 @@ class SimpleTable : public BaseTable<KeyType, ValueType>
 {
     std::vector<std::pair<KeyType, ValueType> > keyData;
 public:
-    virtual Iterator<KeyType, ValueType> begin() override//???
+    virtual Iterator<KeyType, ValueType> begin() override
     {
         if (keyData.size() == 0ull)
             return Iterator<KeyType, ValueType>(nullptr);
