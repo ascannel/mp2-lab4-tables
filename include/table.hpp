@@ -101,3 +101,72 @@ public:
         return max;
     }
 };
+
+template<typename KeyType, typename ValueType>
+class SortTable : public SimpleTable<KeyType, ValueType>
+{
+    std::vector<std::pair<KeyType, ValueType> > keyData;
+public:
+    Iterator<KeyType, ValueType> begin() override
+    {
+        if (keyData.size() == 0ull)
+            return Iterator<KeyType, ValueType>();
+        return &(keyData.front());
+    }
+    Iterator<KeyType, ValueType> end() override
+    {
+        if (keyData.size() == 0ull)
+            return Iterator<KeyType, ValueType>();
+        return &(keyData.back()) + 1ull;
+    }
+    Iterator<KeyType, ValueType> find(const KeyType& key) override
+    {
+        size_t left = 0, right = keyData.size();
+        while (left + 1 < right) {
+            int med = (left + right) / 2;
+            if (keyData[med].first <= key)
+                left = med;
+            else
+                right = med;
+        }
+        if (left < keyData.size() && keyData[left].first == key)
+            return Iterator<KeyType, ValueType>(&keyData[0] + left);
+        else
+            return Iterator<KeyType, ValueType>(&keyData[0] + keyData.size());
+
+    }
+    Iterator<KeyType, ValueType> insert(const KeyType& key, const ValueType& value) override
+    {
+        size_t left = 0, right = keyData.size(), med = 0;
+        while (left < right)
+        {
+            med = (right - left) / 2 + left;
+            if (key < keyData[med].first)
+                right = med;
+            else
+                left = med + 1;
+        }
+
+        auto pair = std::make_pair(key, value);
+        if (left == keyData.size())
+        {
+            keyData.push_back(pair);
+            return Iterator<KeyType, ValueType>(&keyData.back() - 1);
+        }
+
+        auto it = keyData.begin();
+        std::advance(it, left);
+        keyData.insert(it, pair);
+        return Iterator<KeyType, ValueType>(&keyData[left] - 1);
+
+    }
+    virtual void remove(const KeyType& key) override
+    {
+        Iterator<KeyType, ValueType> it = find(key);
+        keyData.erase(std::remove(keyData.begin(), keyData.end(), *it.getPtr()));
+    }
+    virtual ValueType& operator[](const KeyType& key) override
+    {
+        return *(find(key));
+    }
+};

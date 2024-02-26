@@ -6,7 +6,7 @@ int main() {
     table.insert(1, 2);
     table.insert(2, 3);
     auto res = table.find(1);
-    std::cout << *res << endl;
-    std::cout << table.getSize() << endl;
-    vector<int> t;
+    std::cout << *res << std::endl;
+    std::cout << table.getSize() << std::endl;
+    std::vector<int> t;
 }
