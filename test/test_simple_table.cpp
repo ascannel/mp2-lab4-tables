@@ -98,3 +98,20 @@ TEST(SortTable, can_remove_items_in_table) {
     table.remove(1);
     EXPECT_EQ(table.begin().getPtr()->second,5);
 }
+
+TEST(SortTable, can_find_in_odd_table) {
+    SortTable<int, int> table;
+    table.insert(0, 1);
+    table.insert(1, 2);
+    table.insert(2, 3);
+    EXPECT_EQ(table.find(1).getPtr()->second, 2);
+}
+
+TEST(SortTable, can_find_in_even_table) {
+    SortTable<int, int> table;
+    table.insert(0, 1);
+    table.insert(1, 2);
+    table.insert(2, 3);
+    table.insert(3, 4);
+    EXPECT_EQ(table.find(2).getPtr()->second, 3);
+}
