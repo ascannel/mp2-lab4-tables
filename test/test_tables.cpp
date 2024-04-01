@@ -117,5 +117,58 @@ TEST(SortTable, can_find_in_even_table) {
 }
 
 TEST(HashTable, can_create_hash_table) {
-    HashTable<int, int> table;
+    HashTable<int, int> table(100);
+}
+
+TEST(HashTable, can_insert_hash_table) {
+	HashTable<float, int> table(10);
+	int res1 = table.insert(3.14, 1)->second;
+	int et1 = 1;
+	EXPECT_EQ(et1, res1);
+}
+
+TEST(HashTable, can_insert_and_find) {
+	HashTable<float, int> table(5);
+	table.insert(4.8, 10);
+	table.insert(4.9, 20);
+	EXPECT_EQ(table.find(4.8)->second, 10);
+}
+
+TEST(HashTable, can_equal_assign) {
+	HashTable<int, int> table(10);
+	table.insert(1, 1);
+	table.insert(2, 2);
+	table = table;
+	EXPECT_EQ(1, table.find(1)->second);
+	EXPECT_EQ(2, table.find(2)->second);
+}
+TEST(HashTable, can_non_equal_assign) {
+	HashTable<int, int> table(10);
+	table.insert(1, 1);
+	table.insert(2, 2);
+	HashTable<int, int> atable(9);
+	atable.insert(3, 3);
+	atable = table;
+	EXPECT_EQ(1, atable.find(1)->second);
+}
+TEST(HashTable, can_double_table) {
+	HashTable<double, int> table(10);
+	table.insert(1.5, 1);
+	table.insert(2.4, 2);
+	table.insert(3.14, 4);
+	EXPECT_EQ(1, table.find(1.5)->second);
+}
+
+TEST(HashTable, can_balance_big_table) {
+	HashTable<int, int> table(100);
+	for (int i = 0; i < 1000; i++) {
+		table.insert(i, i);
+	}
+}
+TEST(HashTable, can_many_elem_in_one_pos) {
+	HashTable<int, int> table(10);
+	for (int i = 0; i < 1000;) {
+		table.insert(i, i);
+		i += 10;
+	}
 }

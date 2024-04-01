@@ -171,326 +171,223 @@ public:
     }
 };
 
-template<typename KeyType, typename ValueType>
-class HashTable
-{
-    std::hash<KeyType> hasher;
-    std::vector<SortTable<KeyType, ValueType>> nodes;
-
-    size_t getPos(KeyType const& key)
-    {
-        return  hasher(key) % nodes.size();
-    }
-
-
+template <typename TypeKey, typename TypeValue>
+class HashTable {
+private:
+    std::vector<std::pair<TypeKey, TypeValue>>* array;
+    int length;
 public:
-    template<class KeyType, class ValueType>
-    class HashTableIterator : public std::iterator<std::input_iterator_tag, ValueType>
+    class HashTableIterator
     {
-        friend class HashTable<KeyType, ValueType>;
-
-    public:
-
-        HashTableIterator(std::vector<SortTable<KeyType, ValueType>>& nodes, size_t pos, Iterator<KeyType, ValueType> it)
-            : nodes(nodes), pos(pos), itPair(it) { }
-
-        std::pair<KeyType, ValueType>* getPtr()
-        {
-            return itPair->getPtr();
-        }
-
-        bool operator==(HashTableIterator const& other) const
-        {
-            return itPair == other.itPair;
-        }
-
-        bool operator!=(HashTableIterator const& other) const
-        {
-            return itPair != other.itPair;
-        }
-
-        typename HashTableIterator::reference operator*() const
-        {
-            return *itPair;
-        }
-
-        virtual HashTableIterator& operator++()
-        {
-            if (itPair == nodes[pos].end())
-                return *this;
-
-            Iterator<KeyType, ValueType> tmpIter = itPair;
-            size_t tmpPos = pos;
-
-            if (++itPair != nodes[pos].end())
-                return *this;
-
-            for (size_t i = tmpPos + 1; i < nodes.size(); i++)
-                if (nodes[i].begin() != nodes[i].end())
-                {
-                    tmpPos = i;
-                    tmpIter = nodes[i].begin();
-                    break;
-                }
-
-            pos = tmpPos;
-            itPair = tmpIter;
-            return *this;
-        }
-
-        virtual HashTableIterator& operator+(int ind)
-        {
-            for (int i = 0; i < ind; i++)
-                operator++();
-            return *this;
-        }
-
     private:
-        std::vector<SortTable<KeyType, ValueType>>& nodes;
-        size_t pos;
-        Iterator<KeyType, ValueType> itPair;
+        std::vector<std::pair<TypeKey, TypeValue>>* array_;
+        size_t counter_;
+        size_t number_;
+        size_t length_;
+    public:
+        HashTableIterator(std::vector<std::pair<TypeKey, TypeValue>>* array, size_t counter, size_t number, size_t length) : array_(array), counter_(counter), number_(number), length_(length) {}
+        HashTableIterator& operator++()
+        {
+            if (array_[counter_].size() == number_ + 1)
+            {
+                counter_++;
+                while (array_[counter_].size() == 0)
+                {
+                    if (counter_ == length_)
+                        return *this;
+                    number_ = 0;
+                    counter_++;
+                }
+            }
+            else
+            {
+                number_++;
+            }
+            return *this;
+        }
+        static HashTableIterator begin(std::vector<std::pair<TypeKey, TypeValue>>* array, size_t length)
+        {
+            for (size_t i = 0; i < length; i++)
+            {
+                if (array[i].size() != 0)
+                    return HashTableIterator(array, i, 0, length);
+            }
+            return HashTableIterator(array, length, 0, length);
+        }
+        std::pair<TypeKey, TypeValue>& operator*()
+        {
+            return array_[counter_][number_];
+        }
+        bool operator ==(const HashTableIterator& other)
+        {
+            return (array_ == other.array_ && counter_ == other.counter_ && number_ == other.number_);
+        }
+        bool operator !=(const HashTableIterator& other)
+        {
+            return !(*this == other);
+        }
+        std::pair<TypeKey, TypeValue>* operator->()
+        {
+            return &**this;
+        }
     };
-
-    HashTable(int num = 5) : nodes(num) { }
-    HashTableIterator<KeyType, ValueType> begin()
-    {
-        for (size_t i = 0; i < nodes.end(); i++)
-            if (nodes[i].begin() != nodes[i].end())
-                return HashTableIterator<KeyType, ValueType>(nodes, i, nodes[i].begin());
-        return HashTableIterator<KeyType, ValueType>(nodes, nodes.size() - 1, nodes.back().end());
+    HashTable(int ptr) {
+        array = new std::vector<std::pair<TypeKey, TypeValue>>[ptr];
+        length = ptr;
     }
-    HashTableIterator<KeyType, ValueType> end()
-    {
-        for (int i = nodes.size() - 1; i >= 0; i--)
-            if (nodes[i].begin() != nodes[i].end())
-                return HashTableIterator<KeyType, ValueType>(nodes, i, nodes[i].end());
-        return HashTableIterator<KeyType, ValueType>(nodes, nodes.size() - 1, nodes.back().end());
-    }
-    HashTableIterator<KeyType, ValueType> find(const KeyType& key)
-    {
-        size_t pos = getPos(key);
-        Iterator<KeyType, ValueType> itPair = nodes[pos].find(key);
-        return HashTableIterator<KeyType, ValueType>(nodes, pos, itPair);
-        return end();
-    }
-
-    HashTableIterator<KeyType, ValueType> insert(const KeyType& key, const ValueType& value)
-    {
-        size_t pos = getPos(key);
-        Iterator<KeyType, ValueType> itPair = nodes[pos].insert(key, value);
-        return HashTableIterator<KeyType, ValueType>(nodes, pos, itPair);
-    }
-
-    void remove(const KeyType& key)
-    {
-        size_t pos = getPos(key);
-        nodes[pos].remove(key);
-    }
-
-    virtual ValueType& operator[](const KeyType& key)
-    {
-        return *(find(key));
-    }
-
-    void print()
-    {
-        for (int i = 0; i < nodes.size(); i++)
-        {
-            nodes[i].print();
+    HashTable(const HashTable& table) {
+        length = table.length;
+        array = new std::vector<std::pair<TypeKey, TypeValue>>[length];
+        for (int i = 0; i < length; i++) {
+            array[i] = table.array[i];
         }
     }
-
-};
-template<typename KeyType, typename ValueType>
-class AvlTable : public BaseTable<KeyType, ValueType>
-{
-        struct Node
-        {
-            std::pair<KeyType, ValueType> pair;
-            Node* left;
-            Node* right;
-            Node(std::pair<KeyType, ValueType> _pair)
-            {
-                pair = _pair;
-                left = nullptr;
-                right = nullptr;
+    HashTable& operator=(const HashTable& table) {
+        if (this == &table) {
+            return *this;
+        }
+        else {
+            length = table.length;
+            array = new std::vector<std::pair<TypeKey, TypeValue>>[table.length];
+            for (int i = 0; i < table.length; i++) {
+                array[i] = table.array[i];
             }
-            ~Node()
-            {
-                delete left;
-                delete right;
-            }
-        };
-
-        Node* root;
-        size_t size = 0;
-
-        Node* insert(Node* node, const KeyType& key, const ValueType& value)
-        {
-            if (!node)
-            {
-                return new Node(std::make_pair(key, value));
-            }
-            else
-            {
-                if (key < node->pair.first)
-                {
-                    node->left = insert(node->left, key, value);
-                }
-                else
-                {
-                    node->right = insert(node->right, key, value);
+        }
+        return *this;
+    }
+    ~HashTable() {
+        length = 0;
+        delete[] array;
+    }
+    int hash(std::string s) {
+        char al[] = "abcdefghijklmnopqrstuvwxyz";
+        int sum = 0;
+        for (int i = 0; i < s.length(); i++) {
+            char c = s[i];
+            for (int j = 0; j < 26; j++) {
+                if (c == al[j]) {
+                    sum += pow(j, i);
                 }
             }
-            return node;
         }
-
-        Node* find(Node* node, const KeyType& key)
-        {
-            Node* ans;
-
-            if (!node)
-            {
-                return nullptr;
+        return sum % length;
+    }
+    int hash(char c) {
+        char al[] = "abcdefghijklmnopqrstuvwxyz";
+        int sum = 0;
+        for (int j = 0; j < 26; j++) {
+            if (c == al[j]) {
+                sum += pow(j, i);
             }
-
-            if (key == node->pair.first)
-            {
-                return node;
-            }
-
-            if (key < node->pair.first)
-            {
-                ans = find(node->left, key);
-            }
-            else
-            {
-                ans = find(node->right, key);
-            }
-            return ans;
         }
-
-        Node* remove(Node* node, const KeyType& key)
-        {
-            if (!node)
-            {
-                return nullptr;
-            }
-            if (key < node->pair.first)
-            {
-                node->left = remove(node->left, key);
-                return node;
-            }
-            else if (key > node->pair.first)
-            {
-                node->right = remove(node->right, key);
-                return node;
-            }
-            else
-            {
-                if (!node->left && !node->right)
-                {
-                    return nullptr;
-                }
-                if (!node->left)
-                {
-                    return node->right;
-                }
-                if (!node->right)
-                {
-                    return node->left;
-                }
-                Node* minRight = node->right;
-                while (minRight->left)
-                {
-                    minRight = minRight->left;
-                }
-                node->pair = minRight->pair;
-                node->right = remove(node->right, node->pair.first);
-                return node;
+        return sum % length;
+    }
+    int hash(long long i) {
+        return i % length;
+    }
+    int hash(int i) {
+        return i % length;
+    }
+    int hash(double i) {
+        i = abs(i);
+        int ptr;
+        int man = frexp(i, &ptr);
+        int ord = trunc(i);
+        int res = man + pow(2, ord);
+        return res % length;
+    }
+    int hash(float i) {
+        i = abs(i);
+        int ptr;
+        int man = frexp(i, &ptr);
+        int ord = trunc(i);
+        int res = man + pow(2, ord);
+        return res % length;
+    }
+    int hash(std::vector<int> v) {
+        int sum = 0;
+        for (int i = 0; i < v.size(); i++) {
+            sum += v[i];
+        }
+        return sum % length;
+    }
+    auto insert(TypeKey key, const TypeValue& data) {
+        int pos = hash(key);
+        array[pos].push_back(std::make_pair(key, data));
+        int cap = checkCollisions();
+        if (cap) {
+            *this = this->balanceCollisions(cap);
+        }
+        pos = hash(key);
+        for (auto it = array[pos].begin(); it != array[pos].end(); it++) {
+            if (it->first == key) {
+                return it;
             }
         }
 
-        void printLeft(Node* node)
-        {
-            if (node)
-            {
-                printLeft(node->left);
-                std::cout << node->pair.first << " " << node->pair.second << std::endl;
-                printLeft(node->right);
+    }
+    HashTableIterator find(const TypeKey& key) {
+        int pos = hash(key);
+        for (auto it = array[pos].begin(); it != array[pos].end(); it++) {
+            if (it->first == key) {
+                return HashTableIterator(array, pos, it - array[pos].begin(), length);
             }
         }
-public:
-        AvlTable()
-        {
-            root = nullptr;
-            size = 0;
-        }
-
-        virtual size_t getSize() override
-        {
-            return size;
-        }
-
-        virtual Iterator<KeyType, ValueType> find(const KeyType& key) override
-        {
-            auto ans = find(root, key);
-            if (ans == nullptr)
-            {
-                return this->end();
+        return HashTableIterator(array, length, 0, length);
+    }
+    bool remove(const TypeKey& key) {
+        int pos = hash(key);
+        for (auto it = array[pos].begin(); it != array[pos].end(); it++) {
+            if (it->first == key) {
+                array[pos].erase(it);
+                return true;
             }
-            return Iterator<KeyType, ValueType>(&ans->pair);
         }
-
-        virtual Iterator<KeyType, ValueType> insert(const KeyType& key, const ValueType& value)
-        {
-            root = insert(root, key, value);
-            auto ans = std::make_pair(key, value);
-            size++;
-            return Iterator<KeyType, ValueType>(&ans);
-        }
-
-        virtual void remove(const KeyType& key) override
-        {
-            root = remove(root, key);
-        }
-
-        virtual ValueType& operator[](const KeyType& key) override
-        {
-            auto ans = find(root, key);
-            return ans->pair.second;
-        }
-
-        void print()
-        {
-            printLeft(root);
-        }
-
-        virtual Iterator<KeyType, ValueType> getMax() override
-        {
-            if (!root)
-            {
-                return this->begin();
+        return false;
+    }
+    TypeValue& operator[](const TypeKey& key) {
+        int pos = hash(key);
+        for (auto it = array[pos].begin(); it != array[pos].end(); ++it) {
+            if (it->first == key) {
+                return it->second;
             }
-            Node* current = root;
-            while (current->right)
-            {
-                current = current->right;
-            }
-            return Iterator<KeyType, ValueType>(&current->pair);
         }
+        throw std::runtime_error("Invalid key!");
+    }
 
-        virtual Iterator<KeyType, ValueType> getMin() override
-        {
-            if (!root)
-            {
-                return this->begin();
-            }
-            Node* current = root;
-            while (current->left)
-            {
-                current = current->left;
-            }
-            return Iterator<KeyType, ValueType>(&current->pair);
+    HashTableIterator begin() {
+        return HashTableIterator::begin(array, length);
+    }
+    HashTableIterator end() {
+        return HashTableIterator(array, length, 0, length);
+    }
+    int checkCollisions() {
+        int sum = 0;
+        for (int i = 0; i < length; i++) {
+            sum += array[i].size();
         }
+        if (sum > length) {
+            return sum;
+        }
+        else {
+            return 0;
+        }
+    }
+    HashTable balanceCollisions(int newLength) {
+        HashTable<TypeKey, TypeValue> table(newLength);
+        for (int i = 0; i < this->length; i++) {
+            for (auto it = this->array[i].begin(); it != this->array[i].end(); it++) {
+                table.insert(it->first, it->second);
+            }
+        }
+        return table;
+    }
+    friend std::ostream& operator<<(std::ostream& out, const HashTable& v) {
+        for (int i = 0; i < v.length; i++) {
+            for (auto it = v.array[i].begin(); it != v.array[i].end(); it++) {
+                cout << i << " " << it->first << " " << it->second << endl;
+            }
+        }
+        return out;
+    }
 };
