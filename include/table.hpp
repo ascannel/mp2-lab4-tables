@@ -172,155 +172,138 @@ public:
 };
 
 template<typename KeyType, typename ValueType>
-class HashTable : public BaseTable<KeyType, ValueType>
+class HashTable
 {
-private:
-    using Table = SortTable<KeyType, ValueType>;
-    static constexpr size_t default_size = 128;
+    std::hash<KeyType> hasher;
+    std::vector<SortTable<KeyType, ValueType>> nodes;
 
-    std::hash<KeyType> hasher_;
-    std::vector<Table> table_;
-
-    typename std::vector<Table>::iterator getTable(KeyType const& key)
+    size_t getPos(KeyType const& key)
     {
-        std::size_t TableIndex = hasher_(key) % table_.size();
-        return table_.begin() + TableIndex;
+        return  hasher(key) % nodes.size();
     }
+
+
 public:
     template<class KeyType, class ValueType>
     class HashTableIterator : public std::iterator<std::input_iterator_tag, ValueType>
     {
         friend class HashTable<KeyType, ValueType>;
 
-    private:
-        std::vector<Table>& table_;
-        typename std::vector<Table>::iterator itTable_;
-        Iterator<KeyType, ValueType> itPair_;
-
-        HashTableIterator(std::vector<Table>& table, typename std::vector<Table>::iterator itTable, Iterator<KeyType, ValueType> it)
-        {
-            this->table_ = table;
-            this->itTable_ = itTable;
-            this->itPair_ = it;
-        }
-
     public:
-        Iterator<KeyType, ValueType>& getPairIterator()
-        {
-            return itPair_;
-        }
+
+        HashTableIterator(std::vector<SortTable<KeyType, ValueType>>& nodes, size_t pos, Iterator<KeyType, ValueType> it)
+            : nodes(nodes), pos(pos), itPair(it) { }
 
         std::pair<KeyType, ValueType>* getPtr()
         {
-            return itPair_->getPtr();
-        }
-
-        HashTableIterator::reference operator*() const
-        {
-            return *itPair_;
+            return itPair->getPtr();
         }
 
         bool operator==(HashTableIterator const& other) const
         {
-            if (itPair_ == other.itPair_)
-                return true;
-            else
-                return false;
+            return itPair == other.itPair;
         }
 
         bool operator!=(HashTableIterator const& other) const
         {
-            if (itPair_ != other.itPair_)
-                return true;
-            else
-                return false;
+            return itPair != other.itPair;
+        }
+
+        typename HashTableIterator::reference operator*() const
+        {
+            return *itPair;
         }
 
         virtual HashTableIterator& operator++()
         {
-            auto pos = itTable_;
-            auto iterator = itPair_;
-            if (++iterator == table_[pos].end())
-            {
-                while (table_.size() != pos + 1 && iterator == table_[pos].end())
+            if (itPair == nodes[pos].end())
+                return *this;
+
+            Iterator<KeyType, ValueType> tmpIter = itPair;
+            size_t tmpPos = pos;
+
+            if (++itPair != nodes[pos].end())
+                return *this;
+
+            for (size_t i = tmpPos + 1; i < nodes.size(); i++)
+                if (nodes[i].begin() != nodes[i].end())
                 {
-                    iterator = table_[++pos].begin();
+                    tmpPos = i;
+                    tmpIter = nodes[i].begin();
+                    break;
                 }
 
-                if (table_.size() == pos + 1)
-                {
-                    return *this;
-                }
-            }
-            itTable_ = pos;
-            itPair_ = iterator;
+            pos = tmpPos;
+            itPair = tmpIter;
             return *this;
         }
 
-        virtual HashTableIterator& operator+(int index)
+        virtual HashTableIterator& operator+(int ind)
         {
-            for (int i = 0; i < index; i++)
-                this->operator++();
+            for (int i = 0; i < ind; i++)
+                operator++();
             return *this;
         }
+
+    private:
+        std::vector<SortTable<KeyType, ValueType>>& nodes;
+        size_t pos;
+        Iterator<KeyType, ValueType> itPair;
     };
 
-    HashTable(size_t numTable = defaultSize) : table_(numTable) {  }
-
+    HashTable(int num = 5) : nodes(num) { }
     HashTableIterator<KeyType, ValueType> begin()
     {
-        for (auto itTable = table_.begin(); itTable != table_.end(); itTable++)
-            if (itTable->begin() != itTable->end())
-                return HashTableIterator<KeyType, ValueType>(table_, itTable, itTable->begin());
-        return HashTableIterator<KeyType, ValueType>(table_, table_.begin(), table_.begin()->begin());
+        for (size_t i = 0; i < nodes.end(); i++)
+            if (nodes[i].begin() != nodes[i].end())
+                return HashTableIterator<KeyType, ValueType>(nodes, i, nodes[i].begin());
+        return HashTableIterator<KeyType, ValueType>(nodes, nodes.size() - 1, nodes.back().end());
     }
-
     HashTableIterator<KeyType, ValueType> end()
     {
-        auto end = table_.begin();
-        for (auto itTable = table_.begin(); itTable != table_.end(); itTable++)
-            if (itTable->begin() != itTable->end())
-                end = itTable;
-        return HashTableIterator<KeyType, ValueType>(table_, end, end->end());
+        for (int i = nodes.size() - 1; i >= 0; i--)
+            if (nodes[i].begin() != nodes[i].end())
+                return HashTableIterator<KeyType, ValueType>(nodes, i, nodes[i].end());
+        return HashTableIterator<KeyType, ValueType>(nodes, nodes.size() - 1, nodes.back().end());
     }
-
     HashTableIterator<KeyType, ValueType> find(const KeyType& key)
     {
-        auto itTable = getTable(key);
-        auto itPair = itTable->find(key);
-        if (itPair == itTable->end())
-        {
-            return end();
-        }
-        return HashTableIterator<KeyType, ValueType>(table_, itTable, itPair);
+        size_t pos = getPos(key);
+        Iterator<KeyType, ValueType> itPair = nodes[pos].find(key);
+        return HashTableIterator<KeyType, ValueType>(nodes, pos, itPair);
+        return end();
     }
 
     HashTableIterator<KeyType, ValueType> insert(const KeyType& key, const ValueType& value)
     {
-        auto itTable = getTable(key);
-        auto itPair = itTable->insert(key, value);
-        return HashTableIterator<KeyType, ValueType>(table_, itTable, itPair);
+        size_t pos = getPos(key);
+        Iterator<KeyType, ValueType> itPair = nodes[pos].insert(key, value);
+        return HashTableIterator<KeyType, ValueType>(nodes, pos, itPair);
     }
+
     void remove(const KeyType& key)
     {
-        auto itTable = getTable(key);
-        itTable->remove(key);
+        size_t pos = getPos(key);
+        nodes[pos].remove(key);
     }
 
-    void remove(HashTableIterator<KeyType, ValueType>& it)
+    virtual ValueType& operator[](const KeyType& key)
     {
-        auto itTable = getTable(it.getPtr()->first());
-        auto itPair = it.getPairIterator();
-        *itTable->remove(itPair);
+        return *(find(key));
     }
 
-    ValueType& operator[](const KeyType& key) {
-        return *find(key);
-    }
-
-    template<typename KeyType, typename ValueType>
-    class AvlTable : public BaseTable<KeyType, ValueType>
+    void print()
     {
+        for (int i = 0; i < nodes.size(); i++)
+        {
+            nodes[i].print();
+        }
+    }
+
+};
+template<typename KeyType, typename ValueType>
+class AvlTable : public BaseTable<KeyType, ValueType>
+{
         struct Node
         {
             std::pair<KeyType, ValueType> pair;
@@ -437,7 +420,7 @@ public:
                 printLeft(node->right);
             }
         }
-    public:
+public:
         AvlTable()
         {
             root = nullptr;
@@ -510,5 +493,4 @@ public:
             }
             return Iterator<KeyType, ValueType>(&current->pair);
         }
-    };
 };

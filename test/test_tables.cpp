@@ -3,21 +3,21 @@
 
 TEST(SimpleTable, can_insert_items_in_table)
 {
-SimpleTable<int,int>table;
+SimpleTable<int,int> table;
 table.insert(1,5);
 EXPECT_EQ(table[1],5);
 }
 
 TEST(SimpleTables, can_find_element)
 {
-SimpleTable<int,int>table,test_table;
+SimpleTable<int,int> table,test_table;
 table.insert(1,5);
 EXPECT_EQ(table.find(1).getPtr()->second,5);
 }
 
 TEST(SimpleTables, can_get_begin)
 {
-SimpleTable<int,int>table;
+SimpleTable<int,int> table;
 table.insert(1,5);
 table.insert(2,6);
 auto it = table.find(1);
@@ -26,7 +26,7 @@ EXPECT_EQ(table.begin(),it);
 
 TEST(SimpleTables, can_get_end)
 {
-SimpleTable<int,int>table;
+SimpleTable<int,int> table;
 table.insert(1,5);
 table.insert(2,6);
 auto it = table.begin()+2ull;
@@ -114,4 +114,8 @@ TEST(SortTable, can_find_in_even_table) {
     table.insert(2, 3);
     table.insert(3, 4);
     EXPECT_EQ(table.find(2).getPtr()->second, 3);
+}
+
+TEST(HashTable, can_create_hash_table) {
+    HashTable<int, int> table;
 }
