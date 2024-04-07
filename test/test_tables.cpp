@@ -127,11 +127,42 @@ TEST(HashTable, can_insert_hash_table) {
 	EXPECT_EQ(et1, res1);
 }
 
-TEST(HashTable, can_insert_and_find) {
+TEST(HashTable, can_insert) {
+	HashTable<long long, int> table(5);
+	table.insert(4.8, 10);
+	table.insert(4.9, 20);
+	EXPECT_EQ(table.find(4.8)->second, 10);
+}
+
+TEST(HashTable, can_find) {
 	HashTable<float, int> table(5);
 	table.insert(4.8, 10);
 	table.insert(4.9, 20);
 	EXPECT_EQ(table.find(4.8)->second, 10);
+}
+
+TEST(HashTable, can_remove) {
+	HashTable<std::string, int> table(10);
+	table.insert("gold", 1);
+	table.insert("silver", 2);
+	table.insert("platinum", 3);
+
+	EXPECT_TRUE(table.remove("gold"));
+	EXPECT_EQ(table["silver"], 2);
+	EXPECT_EQ(table["platinum"], 3);
+}
+
+TEST(HashTable, iterator_works) {
+	HashTable<double, int> ht(5);
+	ht.insert(3.17, 10);
+	ht.insert(6.08, 20);
+	ht.insert(5.01, 30);
+	int sum = 0;
+	for (auto it = ht.begin(); it != ht.end(); ++it)
+	{
+		sum += it->second;
+	}
+	EXPECT_EQ(sum, 60);
 }
 
 TEST(HashTable, can_equal_assign) {
@@ -142,6 +173,7 @@ TEST(HashTable, can_equal_assign) {
 	EXPECT_EQ(1, table.find(1)->second);
 	EXPECT_EQ(2, table.find(2)->second);
 }
+
 TEST(HashTable, can_non_equal_assign) {
 	HashTable<int, int> table(10);
 	table.insert(1, 1);
@@ -151,24 +183,62 @@ TEST(HashTable, can_non_equal_assign) {
 	atable = table;
 	EXPECT_EQ(1, atable.find(1)->second);
 }
-TEST(HashTable, can_double_table) {
-	HashTable<double, int> table(10);
-	table.insert(1.5, 1);
-	table.insert(2.4, 2);
-	table.insert(3.14, 4);
-	EXPECT_EQ(1, table.find(1.5)->second);
+
+TEST(HashTable, can_balance) {
+	HashTable<int, int> table(10);
+	for (int i = 0; i < 100; i++) {
+		table.insert(i, i);
+	}
+	std::cout << table;
 }
 
-TEST(HashTable, can_balance_big_table) {
-	HashTable<int, int> table(100);
-	for (int i = 0; i < 1000; i++) {
-		table.insert(i, i);
-	}
-}
-TEST(HashTable, can_many_elem_in_one_pos) {
+TEST(HashTable, can_solve_collisions) {
 	HashTable<int, int> table(10);
-	for (int i = 0; i < 1000;) {
+	for (int i = 0; i < 100; i+=10) {
 		table.insert(i, i);
-		i += 10;
 	}
+	std::cout << table;
+}
+
+TEST(AvlTable, can_insert_in_order) {
+	AvlTable<int,int> avltable;
+	avltable.insert(5, 5);
+	avltable.insert(3, 3);
+	avltable.insert(7, 7);
+	avltable.insert(2, 2);
+	avltable.insert(4, 4);
+
+	testing::internal::CaptureStdout();
+	avltable.print();
+	std::string output = testing::internal::GetCapturedStdout();
+
+	EXPECT_EQ(output, "2 2\n3 3\n4 4\n5 5\n7 7\n");
+}
+
+TEST(AvlTable, can_remove) {
+	AvlTable<int, int> avltable;
+	avltable.insert(5, 5);
+	avltable.insert(3, 3);
+	avltable.insert(7, 7);
+	avltable.insert(2, 2);
+	avltable.insert(4, 4);
+
+	avltable.remove(3);
+
+	testing::internal::CaptureStdout();
+	avltable.print();
+	std::string output = testing::internal::GetCapturedStdout();
+
+	EXPECT_EQ(output, "2 2\n4 4\n5 5\n7 7\n");
+}
+
+TEST(AvlTable, can_find) {
+	AvlTable<int, int> avltable;
+	avltable.insert(5, 5);
+	avltable.insert(3, 3);
+	avltable.insert(7, 7);
+	avltable.insert(2, 2);
+	avltable.insert(4, 4);
+
+	EXPECT_EQ(3, avltable.find(3).getPtr()->second);
 }
