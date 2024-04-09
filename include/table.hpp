@@ -1,5 +1,6 @@
 #pragma once
 #include "iterator.hpp"
+#include <iostream>
 
 template<typename KeyType, typename ValueType>
 class BaseTable
@@ -177,7 +178,7 @@ private:
     std::vector<std::pair<KeyType, ValueType>>* array;
     int length;
 public:
-    class HashTableIterator
+    class HashIterator
     {
     private:
         std::vector<std::pair<KeyType, ValueType>>* array_;
@@ -185,8 +186,8 @@ public:
         size_t number_;
         size_t length_;
     public:
-        HashTableIterator(std::vector<std::pair<KeyType, ValueType>>* array, size_t counter, size_t number, size_t length) : array_(array), counter_(counter), number_(number), length_(length) {}
-        HashTableIterator& operator++()
+        HashIterator(std::vector<std::pair<KeyType, ValueType>>* array, size_t counter, size_t number, size_t length) : array_(array), counter_(counter), number_(number), length_(length) {}
+        HashIterator& operator++()
         {
             if (array_[counter_].size() == number_ + 1)
             {
@@ -205,24 +206,24 @@ public:
             }
             return *this;
         }
-        static HashTableIterator begin(std::vector<std::pair<KeyType, ValueType>>* array, size_t length)
+        static HashIterator begin(std::vector<std::pair<KeyType, ValueType>>* array, size_t length)
         {
             for (size_t i = 0; i < length; i++)
             {
                 if (array[i].size() != 0)
-                    return HashTableIterator(array, i, 0, length);
+                    return HashIterator(array, i, 0, length);
             }
-            return HashTableIterator(array, length, 0, length);
+            return HashIterator(array, length, 0, length);
         }
         std::pair<KeyType, ValueType>& operator*()
         {
             return array_[counter_][number_];
         }
-        bool operator ==(const HashTableIterator& other)
+        bool operator ==(const HashIterator& other)
         {
             return (array_ == other.array_ && counter_ == other.counter_ && number_ == other.number_);
         }
-        bool operator !=(const HashTableIterator& other)
+        bool operator !=(const HashIterator& other)
         {
             return !(*this == other);
         }
@@ -326,14 +327,14 @@ public:
         }
 
     }
-    HashTableIterator find(const KeyType& key) {
+    HashIterator find(const KeyType& key) {
         int pos = hash(key);
         for (auto it = array[pos].begin(); it != array[pos].end(); it++) {
             if (it->first == key) {
-                return HashTableIterator(array, pos, it - array[pos].begin(), length);
+                return HashIterator(array, pos, it - array[pos].begin(), length);
             }
         }
-        return HashTableIterator(array, length, 0, length);
+        return HashIterator(array, length, 0, length);
     }
     bool remove(const KeyType& key) {
         int pos = hash(key);
@@ -355,11 +356,11 @@ public:
         throw std::runtime_error("Invalid key!");
     }
 
-    HashTableIterator begin() {
-        return HashTableIterator::begin(array, length);
+    HashIterator begin() {
+        return HashIterator::begin(array, length);
     }
-    HashTableIterator end() {
-        return HashTableIterator(array, length, 0, length);
+    HashIterator end() {
+        return HashIterator(array, length, 0, length);
     }
     int checkCollisions() {
         int sum = 0;
@@ -393,197 +394,197 @@ public:
 };
 
 
-template<typename KeyType, typename ValueType>
-class AvlTable : public BaseTable<KeyType, ValueType>
-{
-    struct Node
-    {
-        std::pair<KeyType, ValueType> pair;
-        Node* left;
-        Node* right;
-        Node(std::pair<KeyType, ValueType> _pair)
-        {
-            pair = _pair;
-            left = nullptr;
-            right = nullptr;
-        }
-        ~Node()
-        {
-            delete left;
-            delete right;
-        }
-    };
-
-    Node* root;
-    size_t size = 0;
-
-    Node* insertNode(Node* node, const KeyType& key, const ValueType& value)
-    {
-        if (!node)
-        {
-            return new Node(std::make_pair(key, value));
-        }
-        else
-        {
-            if (key < node->pair.first)
-            {
-                node->left = insertNode(node->left, key, value);
-            }
-            else
-            {
-                node->right = insertNode(node->right, key, value);
-            }
-        }
-        return node;
-    }
-
-    Node* findNode(Node* node, const KeyType& key)
-    {
-        Node* ans;
-
-        if (!node)
-        {
-            return nullptr;
-        }
-
-        if (key == node->pair.first)
-        {
-            return node;
-        }
-
-        if (key < node->pair.first)
-        {
-            ans = findNode(node->left, key);
-        }
-        else
-        {
-            ans = findNode(node->right, key);
-        }
-        return ans;
-    }
-
-    Node* removeNode(Node* node, const KeyType& key)
-    {
-        if (!node)
-        {
-            return nullptr;
-        }
-        if (key < node->pair.first)
-        {
-            node->left = removeNode(node->left, key);
-            return node;
-        }
-        else if (key > node->pair.first)
-        {
-            node->right = removeNode(node->right, key);
-            return node;
-        }
-        else
-        {
-            if (!node->left && !node->right)
-            {
-                return nullptr;
-            }
-            if (!node->left)
-            {
-                return node->right;
-            }
-            if (!node->right)
-            {
-                return node->left;
-            }
-            Node* minRight = node->right;
-            while (minRight->left)
-            {
-                minRight = minRight->left;
-            }
-            node->pair = minRight->pair;
-            node->right = removeNode(node->right, node->pair.first);
-            return node;
-        }
-    }
-
-    void printLeft(Node* node)
-    {
-        if (node)
-        {
-            printLeft(node->left);
-            std::cout << node->pair.first << " " << node->pair.second << std::endl;
-            printLeft(node->right);
-        }
-    }
+template <typename T>
+class Node {
 public:
-    AvlTable()
-    {
-        root = nullptr;
-        size = 0;
+    T key;
+    Node* left;
+    Node* right;
+    int height;
+
+    Node(const T& key) : key{ key }, left{ nullptr }, right{ nullptr }, height{ 1 } {}
+};
+
+template <typename T>
+class BinaryTreeIterator {
+public:
+    BinaryTreeIterator(Node<T>* node) : current{ node } {}
+
+    T& operator*() { 
+        return current->key; 
+    }
+    T* operator->() { 
+        return &(current->key); 
     }
 
-    virtual size_t getSize() override
-    {
-        return size;
+    BinaryTreeIterator<T>& operator++() {
+        current = successorNode(current);
+        return *this;
     }
-
-    virtual Iterator<KeyType, ValueType> find(const KeyType& key) override
-    {
-        auto ans = findNode(root, key);
-        if (ans == nullptr)
-        {
-            return this->end();
+    Node<T>* minNode(Node<T>* node) const {
+        if (node->left == nullptr) {
+            return node;
         }
-        return Iterator<KeyType, ValueType>(&ans->pair);
-    }
-
-    virtual Iterator<KeyType, ValueType> insert(const KeyType& key, const ValueType& value)
-    {
-        root = insertNode(root, key, value);
-        auto ans = std::make_pair(key, value);
-        size++;
-        return Iterator<KeyType, ValueType>(&ans);
-    }
-
-    virtual void remove(const KeyType& key) override
-    {
-        root = removeNode(root, key);
-    }
-
-    virtual ValueType& operator[](const KeyType& key) override
-    {
-        auto ans = findNode(root, key);
-        return ans->pair.second;
-    }
-
-    void print()
-    {
-        printLeft(root);
-    }
-
-    virtual Iterator<KeyType, ValueType> getMax() override
-    {
-        if (!root)
-        {
-            return this->begin();
+        else {
+            return minNode(node->left);
         }
-        Node* current = root;
-        while (current->right)
-        {
-            current = current->right;
-        }
-        return Iterator<KeyType, ValueType>(&current->pair);
+    }
+    bool operator==(const BinaryTreeIterator<T>& other) const {
+        return current == other.current;
     }
 
-    virtual Iterator<KeyType, ValueType> getMin() override
-    {
-        if (!root)
-        {
-            return this->begin();
+    bool operator!=(const BinaryTreeIterator<T>& other) const {
+        return current != other.current;
+    }
+
+private:
+    Node<T>* current;
+    Node<T>* successorNode(Node<T>* node) const {
+        if (node->right != nullptr) {
+            return minNode(node->right);
         }
-        Node* current = root;
-        while (current->left)
-        {
-            current = current->left;
+
+        Node<T>* parent = node->parent;
+        while (parent != nullptr && node == parent->right) {
+            node = parent;
+            parent = parent->parent;
         }
-        return Iterator<KeyType, ValueType>(&current->pair);
+
+        return parent;
+    }
+};
+template <typename T>
+class BinaryTree {
+private:
+    Node<T>* root;
+    int size;
+
+    BinaryTree() : root{ nullptr }, size{ 0 } {}
+
+    ~BinaryTree() {}
+
+    bool insert(const T& key) {
+        root = insertNode(root, key);
+        if (root != nullptr) {
+            size++;
+            return true;
+        }
+        return false;
+    }
+
+    bool remove(const T& key) {
+        if (removeNode(root, key)) {
+            size--;
+            return true;
+        }
+        return false;
+    }
+
+    bool find(const T& key) const {
+        return findNode(root, key);
+    }
+
+    T min() const {
+        return minNode(root)->key;
+    }
+
+    T max() const {
+        return maxNode(root)->key;
+    }
+
+    BinaryTreeIterator<T> begin() const {
+        return BinaryTreeIterator<T>(minNode(root));
+    }
+
+    BinaryTreeIterator<T> end() const {
+        return BinaryTreeIterator<T>(nullptr);
+    }
+
+    Node<T>* insertNode(Node<T>* node, const T& key) {
+        if (node == nullptr) {
+            return new Node<T>(key);
+        }
+
+        if (key < node->key) {
+            node->left = insertNode(node->left, key);
+        }
+        else if (key > node->key) {
+            node->right = insertNode(node->right, key);
+        }
+
+        updateHeight(node);
+        return rebalance(node);
+    }
+
+    bool removeNode(Node<T>*& node, const T& key) {
+        if (node == nullptr) {
+            return false;
+        }
+
+        if (key < node->key) {
+            return removeNode(node->left, key);
+        }
+        else if (key > node->key) {
+            return removeNode(node->right, key);
+        }
+        else {
+            if (node->left == nullptr && node->right == nullptr) {
+                delete node;
+                node = nullptr;
+                return true;
+            }
+            else if (node->left == nullptr) {
+                Node<T>* temp = node;
+                node = node->right;
+                delete temp;
+                return true;
+            }
+            else if (node->right == nullptr) {
+                Node<T>* temp = node;
+                node = node->left;
+                delete temp;
+                return true;
+            }
+            else {
+                Node<T>* successor = minNode(node->right);
+                node->key = successor->key;
+                return removeNode(node->right, successor->key);
+            }
+        }
+    }
+
+    bool findNode(Node<T>* node, const T& key) const {
+        if (node == nullptr) {
+            return false;
+        }
+
+        if (key < node->key) {
+            return findNode(node->left, key);
+        }
+        else if (key > node->key) {
+            return findNode(node->right, key);
+        }
+        else {
+            return true;
+        }
+    }
+
+    Node<T>* minNode(Node<T>* node) const {
+        if (node->left == nullptr) {
+            return node;
+        }
+        else {
+            return minNode(node->left);
+        }
+    }
+
+    Node<T>* maxNode(Node<T>* node) const {
+        if (node->right == nullptr) {
+            return node;
+        }
+        else {
+            return maxNode(node->right);
+        }
     }
 };
 

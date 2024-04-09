@@ -127,6 +127,19 @@ TEST(HashTable, can_insert_hash_table) {
 	EXPECT_EQ(et1, res1);
 }
 
+TEST(HashTable, can_insert_to_empty_hash_table) {
+	HashTable<int, int> table(0);
+	for (int i = 0; i < 10; i++) {
+		table.insert(i, 1);
+	}
+	for (int i = 0; i < 10; i++) {
+		EXPECT_EQ(table[i], 1);
+	}
+}
+
+// TODO: add int size()
+// TODO: add stress test for 1000+ elements
+
 TEST(HashTable, can_insert) {
 	HashTable<long long, int> table(5);
 	table.insert(4.8, 10);
@@ -165,6 +178,19 @@ TEST(HashTable, iterator_works) {
 	EXPECT_EQ(sum, 60);
 }
 
+TEST(HashTable, iterator_works_with_changes_in_values) {
+	HashTable<int, int> table(10);
+	for (int i = 0; i < 10; i++) {
+		table.insert(i, 1);
+	}
+	for (auto it = table.begin(); it != table.end(); it.operator++()) {
+		it->second++;
+	}
+	for (int i = 0; i < 10; i++) {
+		EXPECT_EQ(table[i], 2);
+	}
+}
+
 TEST(HashTable, can_equal_assign) {
 	HashTable<int, int> table(10);
 	table.insert(1, 1);
@@ -199,46 +225,9 @@ TEST(HashTable, can_solve_collisions) {
 	}
 	std::cout << table;
 }
+// HashTable
+// TODO: add int size()
+// TODO: add stress test for 1000+ elements
 
-TEST(AvlTable, can_insert_in_order) {
-	AvlTable<int,int> avltable;
-	avltable.insert(5, 5);
-	avltable.insert(3, 3);
-	avltable.insert(7, 7);
-	avltable.insert(2, 2);
-	avltable.insert(4, 4);
-
-	testing::internal::CaptureStdout();
-	avltable.print();
-	std::string output = testing::internal::GetCapturedStdout();
-
-	EXPECT_EQ(output, "2 2\n3 3\n4 4\n5 5\n7 7\n");
-}
-
-TEST(AvlTable, can_remove) {
-	AvlTable<int, int> avltable;
-	avltable.insert(5, 5);
-	avltable.insert(3, 3);
-	avltable.insert(7, 7);
-	avltable.insert(2, 2);
-	avltable.insert(4, 4);
-
-	avltable.remove(3);
-
-	testing::internal::CaptureStdout();
-	avltable.print();
-	std::string output = testing::internal::GetCapturedStdout();
-
-	EXPECT_EQ(output, "2 2\n4 4\n5 5\n7 7\n");
-}
-
-TEST(AvlTable, can_find) {
-	AvlTable<int, int> avltable;
-	avltable.insert(5, 5);
-	avltable.insert(3, 3);
-	avltable.insert(7, 7);
-	avltable.insert(2, 2);
-	avltable.insert(4, 4);
-
-	EXPECT_EQ(3, avltable.find(3).getPtr()->second);
-}
+//BinaryTree Tests:
+// insert, remove, find, iterator with changes in values
