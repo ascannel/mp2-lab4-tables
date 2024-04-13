@@ -393,197 +393,118 @@ public:
     }
 };
 
-
-template <typename T>
-class Node {
-public:
-    T key;
-    Node* left;
-    Node* right;
-    int height;
-
-    Node(const T& key) : key{ key }, left{ nullptr }, right{ nullptr }, height{ 1 } {}
-};
-
-template <typename T>
-class BinaryTreeIterator {
-public:
-    BinaryTreeIterator(Node<T>* node) : current{ node } {}
-
-    T& operator*() { 
-        return current->key; 
-    }
-    T* operator->() { 
-        return &(current->key); 
-    }
-
-    BinaryTreeIterator<T>& operator++() {
-        current = successorNode(current);
-        return *this;
-    }
-    Node<T>* minNode(Node<T>* node) const {
-        if (node->left == nullptr) {
-            return node;
-        }
-        else {
-            return minNode(node->left);
-        }
-    }
-    bool operator==(const BinaryTreeIterator<T>& other) const {
-        return current == other.current;
-    }
-
-    bool operator!=(const BinaryTreeIterator<T>& other) const {
-        return current != other.current;
-    }
-
-private:
-    Node<T>* current;
-    Node<T>* successorNode(Node<T>* node) const {
-        if (node->right != nullptr) {
-            return minNode(node->right);
-        }
-
-        Node<T>* parent = node->parent;
-        while (parent != nullptr && node == parent->right) {
-            node = parent;
-            parent = parent->parent;
-        }
-
-        return parent;
-    }
-};
-template <typename T>
+template <typename KeyType, typename ValueType>
 class BinaryTree {
 private:
-    Node<T>* root;
+    Node<KeyType, ValueType>* root;
     int size;
-
+public:
     BinaryTree() : root{ nullptr }, size{ 0 } {}
 
     ~BinaryTree() {}
 
-    bool insert(const T& key) {
-        root = insertNode(root, key);
-        if (root != nullptr) {
-            size++;
-            return true;
+    void insert(const KeyType& key, ValueType value) {
+        root = insertNode(root, key, value);
+    }
+
+    void remove(const KeyType& key, ValueType value) {
+        root = removeNode(root, key, value);
+    }
+
+    void inorder() {
+        inorderNode(root);
+    }
+
+    BinaryTreeIterator<KeyType, ValueType>* find(const KeyType& key) const {
+        Node<KeyType, ValueType>* node = findNode(key);
+        return BinaryTreeIterator<KeyType, ValueType>(node, root, size);
+    }
+
+    BinaryTreeIterator<KeyType, ValueType> begin() const {
+        Node<KeyType, ValueType>* node = root;
+        while (node->left != nullptr) {
+            node = node->left;
         }
-        return false;
+        return BinaryTreeIterator<KeyType, ValueType>(node, root, size);
     }
 
-    bool remove(const T& key) {
-        if (removeNode(root, key)) {
-            size--;
-            return true;
+    BinaryTreeIterator<KeyType, ValueType> end() const {
+        Node<KeyType, ValueType>* node = root;
+        while (node->right != nullptr) {
+            node = node->right;
         }
-        return false;
+        return BinaryTreeIterator<KeyType, ValueType>(node, root, size);
     }
 
-    bool find(const T& key) const {
-        return findNode(root, key);
+    Node<KeyType, ValueType>* minValueNode(Node<KeyType, ValueType>* node) {
+        Node<KeyType, ValueType>* current = node;
+        while (current && current->left != NULL) {
+            current = current->left;
+        }
+        return current;
     }
 
-    T min() const {
-        return minNode(root)->key;
-    }
-
-    T max() const {
-        return maxNode(root)->key;
-    }
-
-    BinaryTreeIterator<T> begin() const {
-        return BinaryTreeIterator<T>(minNode(root));
-    }
-
-    BinaryTreeIterator<T> end() const {
-        return BinaryTreeIterator<T>(nullptr);
-    }
-
-    Node<T>* insertNode(Node<T>* node, const T& key) {
+    Node<KeyType, ValueType>* insertNode(Node<KeyType, ValueType>* node, KeyType key, ValueType value) {
         if (node == nullptr) {
-            return new Node<T>(key);
+            return new Node<KeyType, ValueType>(key, value);
         }
-
-        if (key < node->key) {
-            node->left = insertNode(node->left, key);
-        }
-        else if (key > node->key) {
-            node->right = insertNode(node->right, key);
-        }
-
-        updateHeight(node);
-        return rebalance(node);
-    }
-
-    bool removeNode(Node<T>*& node, const T& key) {
-        if (node == nullptr) {
-            return false;
-        }
-
-        if (key < node->key) {
-            return removeNode(node->left, key);
-        }
-        else if (key > node->key) {
-            return removeNode(node->right, key);
+        if (value <= node->value) {
+            node->left = insertNode(node->left, key, value);
         }
         else {
-            if (node->left == nullptr && node->right == nullptr) {
+            node->right = insertNode(node->right, key, value);
+        }
+        size++;
+        return node;
+    }
+
+    Node<KeyType, ValueType>* removeNode(Node<KeyType, ValueType>* node, KeyType key, ValueType value) {
+        if (node == NULL) {
+            return node;
+        }
+        if (value < node->value) {
+            node->left = removeNode(node->left, key, value);
+        }
+        else if (value > node->value) {
+            node->right = removeNode(node->right, key, value);
+        }
+        else {
+            if (node->left == nullptr) {
+                Node<KeyType, ValueType>* temp = node->right;
                 delete node;
-                node = nullptr;
-                return true;
-            }
-            else if (node->left == nullptr) {
-                Node<T>* temp = node;
-                node = node->right;
-                delete temp;
-                return true;
+                return temp;
             }
             else if (node->right == nullptr) {
-                Node<T>* temp = node;
+                Node<KeyType, ValueType>* temp = node->left;
+                delete node;
+                return temp;
+            }
+            Node<KeyType, ValueType>* temp = minValueNode(node->right);
+            node->value = temp->key;
+            node->right = removeNode(node->right, temp->key, temp->value);
+        }
+        return node;
+    }
+
+    Node<KeyType, ValueType>* findNode(KeyType& key) {
+        Node<KeyType, ValueType>* node = root;
+        while (node->key != key) {
+            if (key <= node->key && node->left != nullptr) {
                 node = node->left;
-                delete temp;
-                return true;
+            }
+            else if (key > node->key && node->right != nullptr) {
+                node = node->right;
             }
             else {
-                Node<T>* successor = minNode(node->right);
-                node->key = successor->key;
-                return removeNode(node->right, successor->key);
+                throw "Invalid value";
             }
         }
+        return node;
     }
-
-    bool findNode(Node<T>* node, const T& key) const {
-        if (node == nullptr) {
-            return false;
-        }
-
-        if (key < node->key) {
-            return findNode(node->left, key);
-        }
-        else if (key > node->key) {
-            return findNode(node->right, key);
-        }
-        else {
-            return true;
-        }
-    }
-
-    Node<T>* minNode(Node<T>* node) const {
-        if (node->left == nullptr) {
-            return node;
-        }
-        else {
-            return minNode(node->left);
-        }
-    }
-
-    Node<T>* maxNode(Node<T>* node) const {
-        if (node->right == nullptr) {
-            return node;
-        }
-        else {
-            return maxNode(node->right);
+    void inorderNode(Node<KeyType, ValueType>* node) {
+        if (node != nullptr) {
+            inorderNode(node->left);
+            inorderNode(node->right);
         }
     }
 };
