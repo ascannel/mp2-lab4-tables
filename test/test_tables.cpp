@@ -1,4 +1,4 @@
-#include <gtest.h>
+#include <gtest/gtest.h>
 #include <table.hpp>
 
 TEST(SimpleTable, can_insert_items_in_table)
@@ -225,6 +225,60 @@ TEST(HashTable, can_solve_collisions) {
 	}
 	std::cout << table;
 }
+
+TEST(BinaryTree, can_it_insert){
+	BinaryTree<int, int> tree;
+	tree.insert(2,3);
+	EXPECT_EQ(tree->value, 3);
+
+}
+
+TEST(BinaryTree, can_in_add_right){
+	BinaryTree<int, int> tree;
+	tree.insert(4,1);
+	tree.insert(5,2);
+	tree.insert(3,3);
+	tree.insert(1,4);
+	tree.insert(2,5);
+	EXPECT_EQ(tree.begin()->value, 4);
+	EXPECT_EQ(tree->left->value, 3);
+	EXPECT_EQ(tree->left->right->value, 5);
+	EXPECT_EQ(tree.end()->value, 2);
+}
+
+TEST(BinaryTree, can_it_remove){
+	BinaryTree<int,int> tree;
+	tree.insert(5,1);
+	tree.insert(4,2);
+	tree.insert(3,3);
+	tree.remove(5,1);
+	ASSERT_EQ(tree->value, 1);
+}
+
+TEST(BinaryTree, can_in_remove_right){
+	BinaryTree<int, int> tree;
+	tree.insert(4,1);
+	tree.insert(5,2);
+	tree.insert(3,3);
+	tree.insert(1,4);
+	tree.remove(3,3);
+	EXPECT_EQ(tree->left->value, 4);
+}
+
+TEST(BinaryTree, can_in_find){
+	BinaryTree<int, int> tree;
+	tree.insert(4,1);
+	tree.insert(5,2);
+	tree.insert(3,3);
+	tree.insert(1,4);
+	EXPECT_EQ(tree.find(1)->value, 4);
+	EXPECT_EQ(tree.find(2)->value, 3);
+	EXPECT_EQ(tree.find(4)->value, 1);
+	EXPECT_EQ(tree.find(5)->value, 2);
+}
+
+
+
 // HashTable
 // TODO: add int size()
 // TODO: add stress test for 1000+ elements

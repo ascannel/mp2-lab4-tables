@@ -415,7 +415,7 @@ public:
         inorderNode(root);
     }
 
-    BinaryTreeIterator<KeyType, ValueType>* find(const KeyType& key) const {
+    BinaryTreeIterator<KeyType, ValueType> find(const KeyType& key) const {
         Node<KeyType, ValueType>* node = findNode(key);
         return BinaryTreeIterator<KeyType, ValueType>(node, root, size);
     }
@@ -448,7 +448,7 @@ public:
         if (node == nullptr) {
             return new Node<KeyType, ValueType>(key, value);
         }
-        if (value <= node->value) {
+        if (key <= node->key) {
             node->left = insertNode(node->left, key, value);
         }
         else {
@@ -458,7 +458,49 @@ public:
         return node;
     }
 
+    /*Node<KeyType, ValueType>* insertNode(Node<KeyType, ValueType>* node, KeyType key, ValueType value) {
+        if (node == nullptr) {
+            return new Node<KeyType, ValueType>(key, value);
+        }
+        if (value <= node->value) {
+            node->left = insertNode(node->left, key, value);
+        }
+        else {
+            node->right = insertNode(node->right, key, value);
+        }
+        size++;
+        return node;
+    }*/ //if it need to work by value
+
     Node<KeyType, ValueType>* removeNode(Node<KeyType, ValueType>* node, KeyType key, ValueType value) {
+        if (node == NULL) {
+            return node;
+        }
+        if (key < node->key) {
+            node->left = removeNode(node->left, key, value);
+        }
+        else if (key > node->key) {
+            node->right = removeNode(node->right, key, value);
+        }
+        else {
+            if (node->left == nullptr) {
+                Node<KeyType, ValueType>* temp = node->right;
+                delete node;
+                return temp;
+            }
+            else if (node->right == nullptr) {
+                Node<KeyType, ValueType>* temp = node->left;
+                delete node;
+                return temp;
+            }
+            Node<KeyType, ValueType>* temp = minValueNode(node->right);
+            node->value = temp->key;
+            node->right = removeNode(node->right, temp->key, temp->value);
+        }
+        return node;
+    }
+
+    /*Node<KeyType, ValueType>* removeNode(Node<KeyType, ValueType>* node, KeyType key, ValueType value) {
         if (node == NULL) {
             return node;
         }
@@ -484,7 +526,7 @@ public:
             node->right = removeNode(node->right, temp->key, temp->value);
         }
         return node;
-    }
+    }*/ // if it need to work by value
 
     Node<KeyType, ValueType>* findNode(KeyType& key) {
         Node<KeyType, ValueType>* node = root;
@@ -507,5 +549,10 @@ public:
             inorderNode(node->right);
         }
     }
+
+    Node<KeyType, ValueType>* operator->() {
+        return this->root;
+    }
+
 };
 
