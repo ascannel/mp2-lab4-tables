@@ -233,8 +233,15 @@ public:
         }
     };
     HashTable(int ptr) {
-        array = new std::vector<std::pair<KeyType, ValueType>>[ptr];
-        length = ptr;
+        if (ptr != 0) {
+            array = new std::vector<std::pair<KeyType, ValueType>>[ptr];
+            length = ptr;
+        }
+        else {
+            ptr++;
+            array = new std::vector<std::pair<KeyType, ValueType>>[ptr];
+            length = ptr;
+        }
     }
     HashTable(const HashTable& table) {
         length = table.length;
@@ -405,19 +412,37 @@ public:
 
     void insert(const KeyType& key, ValueType value) {
         root = insertNode(root, key, value);
+        size++;
     }
 
-    void remove(const KeyType& key, ValueType value) {
-        root = removeNode(root, key, value);
+    int sizeTree() {
+        int _size = size;
+        return _size;
+    }
+
+    void remove(const KeyType& key) {
+        root = removeNode(root, key);
+        size--;
     }
 
     void inorder() {
         inorderNode(root);
     }
 
-    BinaryTreeIterator<KeyType, ValueType> find(const KeyType& key) const {
-        Node<KeyType, ValueType>* node = findNode(key);
-        return BinaryTreeIterator<KeyType, ValueType>(node, root, size);
+    BinaryTreeIterator<KeyType, ValueType> find(KeyType key) const {
+        Node<KeyType, ValueType>* node = root;
+        while (node->key != key) {
+            if (key <= node->key && node->left != NULL) {
+                node = node->left;
+            }
+            else if (key > node->key && node->right != NULL) {
+                node = node->right;
+            }
+            else {
+                throw "Invalid value";
+            }
+        }
+        return BinaryTreeIterator<KeyType, ValueType>(node);
     }
 
     BinaryTreeIterator<KeyType, ValueType> begin() const {
@@ -425,7 +450,7 @@ public:
         while (node->left != nullptr) {
             node = node->left;
         }
-        return BinaryTreeIterator<KeyType, ValueType>(node, root, size);
+        return BinaryTreeIterator<KeyType, ValueType>(node);
     }
 
     BinaryTreeIterator<KeyType, ValueType> end() const {
@@ -433,7 +458,7 @@ public:
         while (node->right != nullptr) {
             node = node->right;
         }
-        return BinaryTreeIterator<KeyType, ValueType>(node, root, size);
+        return BinaryTreeIterator<KeyType, ValueType>(node);
     }
 
     Node<KeyType, ValueType>* minValueNode(Node<KeyType, ValueType>* node) {
@@ -450,11 +475,12 @@ public:
         }
         if (key <= node->key) {
             node->left = insertNode(node->left, key, value);
+            node->left->parent = node;
         }
-        else {
+        if (key > node->key) {
             node->right = insertNode(node->right, key, value);
+            node->right->parent = node;
         }
-        size++;
         return node;
     }
 
@@ -472,15 +498,17 @@ public:
         return node;
     }*/ //if it need to work by value
 
-    Node<KeyType, ValueType>* removeNode(Node<KeyType, ValueType>* node, KeyType key, ValueType value) {
+    Node<KeyType, ValueType>* removeNode(Node<KeyType, ValueType>* node, KeyType key) {
         if (node == NULL) {
             return node;
         }
         if (key < node->key) {
-            node->left = removeNode(node->left, key, value);
+            node->left = removeNode(node->left, key);
+            node->left->parent = node;
         }
         else if (key > node->key) {
-            node->right = removeNode(node->right, key, value);
+            node->right = removeNode(node->right, key);
+            node->right->parent = node;
         }
         else {
             if (node->left == nullptr) {
@@ -495,7 +523,7 @@ public:
             }
             Node<KeyType, ValueType>* temp = minValueNode(node->right);
             node->value = temp->key;
-            node->right = removeNode(node->right, temp->key, temp->value);
+            node->right = removeNode(node->right, temp->key);
         }
         return node;
     }
@@ -528,21 +556,6 @@ public:
         return node;
     }*/ // if it need to work by value
 
-    Node<KeyType, ValueType>* findNode(KeyType& key) {
-        Node<KeyType, ValueType>* node = root;
-        while (node->key != key) {
-            if (key <= node->key && node->left != nullptr) {
-                node = node->left;
-            }
-            else if (key > node->key && node->right != nullptr) {
-                node = node->right;
-            }
-            else {
-                throw "Invalid value";
-            }
-        }
-        return node;
-    }
     void inorderNode(Node<KeyType, ValueType>* node) {
         if (node != nullptr) {
             inorderNode(node->left);

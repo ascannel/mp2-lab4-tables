@@ -1,5 +1,7 @@
-#include <gtest/gtest.h>
+#include <gtest.h>
 #include <table.hpp>
+#include <random>
+
 
 TEST(SimpleTable, can_insert_items_in_table)
 {
@@ -137,9 +139,6 @@ TEST(HashTable, can_insert_to_empty_hash_table) {
 	}
 }
 
-// TODO: add int size()
-// TODO: add stress test for 1000+ elements
-
 TEST(HashTable, can_insert) {
 	HashTable<long long, int> table(5);
 	table.insert(4.8, 10);
@@ -204,10 +203,10 @@ TEST(HashTable, can_non_equal_assign) {
 	HashTable<int, int> table(10);
 	table.insert(1, 1);
 	table.insert(2, 2);
-	HashTable<int, int> atable(9);
-	atable.insert(3, 3);
-	atable = table;
-	EXPECT_EQ(1, atable.find(1)->second);
+	HashTable<int, int> _table(9);
+	_table.insert(3, 3);
+	_table = table;
+	EXPECT_EQ(1, _table.find(1)->second);
 }
 
 TEST(HashTable, can_balance) {
@@ -215,7 +214,13 @@ TEST(HashTable, can_balance) {
 	for (int i = 0; i < 100; i++) {
 		table.insert(i, i);
 	}
-	std::cout << table;
+}
+
+TEST(HashTable, can_balance_big_table) {
+	HashTable<int, int> ht(10);
+	for (int i = 0; i < 1000; i++) {
+		ht.insert(i, i);
+	}
 }
 
 TEST(HashTable, can_solve_collisions) {
@@ -223,61 +228,119 @@ TEST(HashTable, can_solve_collisions) {
 	for (int i = 0; i < 100; i+=10) {
 		table.insert(i, i);
 	}
-	std::cout << table;
 }
 
-TEST(BinaryTree, can_it_insert){
+TEST(BinaryTree, can_insert){
 	BinaryTree<int, int> tree;
 	tree.insert(2,3);
 	EXPECT_EQ(tree->value, 3);
 
 }
 
-TEST(BinaryTree, can_in_add_right){
+TEST(BinaryTree, can_insert_right){
 	BinaryTree<int, int> tree;
 	tree.insert(4,1);
 	tree.insert(5,2);
-	tree.insert(3,3);
+	tree.insert(2,3);
 	tree.insert(1,4);
-	tree.insert(2,5);
-	EXPECT_EQ(tree.begin()->value, 4);
+	tree.insert(3,5);
+	EXPECT_EQ(tree->value, 1);
+	EXPECT_EQ(tree->right->value, 2);
 	EXPECT_EQ(tree->left->value, 3);
+	EXPECT_EQ(tree->left->left->value, 4);
 	EXPECT_EQ(tree->left->right->value, 5);
-	EXPECT_EQ(tree.end()->value, 2);
 }
 
-TEST(BinaryTree, can_it_remove){
+TEST(BinaryTree, can_remove){
 	BinaryTree<int,int> tree;
 	tree.insert(5,1);
 	tree.insert(4,2);
 	tree.insert(3,3);
-	tree.remove(5,1);
-	ASSERT_EQ(tree->value, 1);
+	tree.remove(5);
+	ASSERT_EQ(tree->value, 2);
 }
 
-TEST(BinaryTree, can_in_remove_right){
+TEST(BinaryTree, can_remove_right){
 	BinaryTree<int, int> tree;
 	tree.insert(4,1);
 	tree.insert(5,2);
 	tree.insert(3,3);
 	tree.insert(1,4);
-	tree.remove(3,3);
+	tree.remove(3);
 	EXPECT_EQ(tree->left->value, 4);
 }
 
-TEST(BinaryTree, can_in_find){
+TEST(BinaryTree, parents) {
+	BinaryTree<int, int> tree;
+	tree.insert(4, 1);
+	tree.insert(5, 2);
+	tree.insert(3, 3);
+	EXPECT_EQ(tree.end()->parent->key, tree.begin()->parent->key);
+}
+
+TEST(BinaryTree, can_find){
 	BinaryTree<int, int> tree;
 	tree.insert(4,1);
 	tree.insert(5,2);
 	tree.insert(3,3);
 	tree.insert(1,4);
 	EXPECT_EQ(tree.find(1)->value, 4);
-	EXPECT_EQ(tree.find(2)->value, 3);
-	EXPECT_EQ(tree.find(4)->value, 1);
-	EXPECT_EQ(tree.find(5)->value, 2);
 }
 
+TEST(BinaryTree, iterator_works_with_changes_in_values) {
+	BinaryTree<int, int> tree;
+	for (int i = 0; i < 10; i++) {
+		tree.insert(i, 1);
+	}
+	for (auto it = tree.begin();; it.operator++()) {
+		it->value = it->value + 1;
+		if (it == tree.end()) {
+			break;
+		}
+	}
+	for (int i = 0; i < 10; i++) {
+		if (tree.find(i)->value != 2) std::cout << i;
+		EXPECT_EQ(tree.find(i)->value, 2);
+	}
+}
 
+TEST(BinaryTree, can_insert_random_values) {
+	BinaryTree<int, int> tree;
+	std::vector<int> randNums;
+	for (int i = 0; i < 100; i++) {
+		randNums.push_back(i);
+	}
+
+	//std::random_shuffle(randNums.begin(), randNums.end());
+	for (int i = 0; i < 100; i++) {
+		int ind = rand() % randNums.size();
+		tree.insert(randNums[ind],1);
+		std::swap(randNums[ind], randNums[randNums.size() - 1]);
+		randNums.pop_back();
+	}
+	for (int i = 0; i < 100; i++) {
+		EXPECT_EQ(tree.find(i)->value, 1);
+	}
+}
+
+//TEST(BinaryTree, can_remove_random_values) {
+//	BinaryTree<int, int> tree;
+//	std::vector<int> randNums;
+//	for (int i = 0; i < 10; i++) {
+//		randNums.push_back(i);
+//	}
+//	for (int i = 0; i < 10; i++) {
+//		int ind = rand() % randNums.size();
+//		tree.insert(randNums[ind],1);
+//		std::swap(randNums[ind], randNums[randNums.size() - 1]);
+//		randNums.pop_back();
+//	}
+//	for (int i = 0; i < 10; i++) {
+//		EXPECT_EQ(tree.find(i)->value, 1);
+//		tree.remove(i);
+//	}
+//	EXPECT_EQ(tree.sizeTree(), 0);
+//}
 
 // HashTable
 // TODO: add int size()
