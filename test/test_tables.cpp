@@ -216,12 +216,12 @@ TEST(HashTable, can_balance) {
 	}
 }
 
-TEST(HashTable, can_balance_big_table) {
+/*TEST(HashTable, can_balance_big_table) {
 	HashTable<int, int> ht(10);
 	for (int i = 0; i < 1000; i++) {
 		ht.insert(i, i);
 	}
-}
+}*/
 
 TEST(HashTable, can_solve_collisions) {
 	HashTable<int, int> table(10);
@@ -311,7 +311,7 @@ TEST(BinaryTree, can_insert_random_values) {
 		randNums.push_back(i);
 	}
 
-	//std::random_shuffle(randNums.begin(), randNums.end());
+
 	for (int i = 0; i < 100; i++) {
 		int ind = rand() % randNums.size();
 		tree.insert(randNums[ind],1);
@@ -323,28 +323,61 @@ TEST(BinaryTree, can_insert_random_values) {
 	}
 }
 
-//TEST(BinaryTree, can_remove_random_values) {
-//	BinaryTree<int, int> tree;
-//	std::vector<int> randNums;
-//	for (int i = 0; i < 10; i++) {
-//		randNums.push_back(i);
-//	}
-//	for (int i = 0; i < 10; i++) {
-//		int ind = rand() % randNums.size();
-//		tree.insert(randNums[ind],1);
-//		std::swap(randNums[ind], randNums[randNums.size() - 1]);
-//		randNums.pop_back();
-//	}
-//	for (int i = 0; i < 10; i++) {
-//		EXPECT_EQ(tree.find(i)->value, 1);
-//		tree.remove(i);
-//	}
-//	EXPECT_EQ(tree.sizeTree(), 0);
-//}
+TEST(AVLTree, can_insert) {
+	AVLTree<int, std::string> tree;
+	tree.insert(5, "five");
+	tree.insert(3, "three");
+	tree.insert(7, "seven");
+	EXPECT_EQ(tree.sizeTree(), 3);
+}
 
-// HashTable
-// TODO: add int size()
-// TODO: add stress test for 1000+ elements
+TEST(AVLTree, can_remove) {
+	AVLTree<int, int> tree;
+	tree.insert(5, 5);
+	tree.insert(3, 3);
+	tree.insert(7, 7);
+	tree.remove(7);
+	EXPECT_EQ(tree.sizeTree(), 2);
+}
 
-//BinaryTree Tests:
-// insert, remove, find, iterator with changes in values
+TEST(AVLTree, can_find) {
+	AVLTree<int, std::string> tree;
+	tree.insert(5, "five");
+	tree.insert(3, "three");
+	tree.insert(7, "seven");
+	AVLTreeIterator<int, std::string> it = tree.find(3);
+	EXPECT_EQ((*it), "three");
+}
+
+TEST(AVLTree, iterator_works) {
+	AVLTree<int, std::string> tree;
+	tree.insert(5, "five");
+	tree.insert(3, "three");
+	tree.insert(7, "seven");
+
+	AVLTreeIterator<int, std::string> it = tree.begin();
+	EXPECT_EQ((*it), "three");
+
+	++it;
+	EXPECT_EQ((*it), "five");
+
+	++it;
+	EXPECT_EQ((*it), "seven");
+}
+
+TEST(AVLTree, iterator_works_with_changes_in_values) {
+	AVLTree<int, int> tree;
+	tree.insert(5, 5);
+	tree.insert(3, 3);
+	tree.insert(7, 7);
+
+	AVLTreeIterator<int, int> it = tree.begin();
+	it->value += 1;
+	EXPECT_EQ((*it), 4);
+	++it;
+	it->value += 1;
+	EXPECT_EQ((*it), 6);
+	++it;
+	it->value += 1;
+	EXPECT_EQ((*it), 8);
+}

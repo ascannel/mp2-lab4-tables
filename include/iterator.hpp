@@ -111,3 +111,61 @@ public:
         return current != other.current;
     }
 };
+
+template <typename KeyType, typename ValueType>
+struct NodeAVL {
+public:
+    KeyType key;
+    ValueType value;
+    NodeAVL* left;
+    NodeAVL* right;
+    NodeAVL* parent;
+    int height; // новое поле для AVL дерева
+
+    NodeAVL(KeyType key, ValueType value) : key{ key }, value{ value }, left{ nullptr }, right{ nullptr }, parent{ nullptr }, height{ 1 } {}
+};
+
+template <typename KeyType, typename ValueType>
+class AVLTreeIterator {
+private:
+    NodeAVL<KeyType, ValueType>* current;
+
+    NodeAVL<KeyType, ValueType>* belowNode(NodeAVL<KeyType, ValueType>* node) const {
+        if (node->right != nullptr) {
+            return minHelper(node->right);
+        }
+
+        NodeAVL<KeyType, ValueType>* parent = node->parent;
+        while (parent != nullptr && node == parent->right) {
+            node = parent;
+            parent = parent->parent;
+        }
+
+        return parent;
+    }
+public:
+    AVLTreeIterator(NodeAVL<KeyType, ValueType>* node) { current = node; }
+
+    ValueType& operator*() { return current->value; }
+    NodeAVL<KeyType, ValueType>* operator->() { return current; }
+
+    AVLTreeIterator& operator++() {
+        current = belowNode(current);
+        return *this;
+    }
+    NodeAVL<KeyType, ValueType>* minHelper(NodeAVL<KeyType, ValueType>* node) const {
+        if (node->left == nullptr) {
+            return node;
+        }
+        else {
+            return minHelper(node->left);
+        }
+    }
+    bool operator==(const AVLTreeIterator& other) const {
+        return current == other.current;
+    }
+
+    bool operator!=(const AVLTreeIterator& other) const {
+        return current != other.current;
+    }
+};

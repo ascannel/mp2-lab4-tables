@@ -484,20 +484,6 @@ public:
         return node;
     }
 
-    /*Node<KeyType, ValueType>* insertNode(Node<KeyType, ValueType>* node, KeyType key, ValueType value) {
-        if (node == nullptr) {
-            return new Node<KeyType, ValueType>(key, value);
-        }
-        if (value <= node->value) {
-            node->left = insertNode(node->left, key, value);
-        }
-        else {
-            node->right = insertNode(node->right, key, value);
-        }
-        size++;
-        return node;
-    }*/ //if it need to work by value
-
     Node<KeyType, ValueType>* removeNode(Node<KeyType, ValueType>* node, KeyType key) {
         if (node == NULL) {
             return node;
@@ -528,34 +514,6 @@ public:
         return node;
     }
 
-    /*Node<KeyType, ValueType>* removeNode(Node<KeyType, ValueType>* node, KeyType key, ValueType value) {
-        if (node == NULL) {
-            return node;
-        }
-        if (value < node->value) {
-            node->left = removeNode(node->left, key, value);
-        }
-        else if (value > node->value) {
-            node->right = removeNode(node->right, key, value);
-        }
-        else {
-            if (node->left == nullptr) {
-                Node<KeyType, ValueType>* temp = node->right;
-                delete node;
-                return temp;
-            }
-            else if (node->right == nullptr) {
-                Node<KeyType, ValueType>* temp = node->left;
-                delete node;
-                return temp;
-            }
-            Node<KeyType, ValueType>* temp = minValueNode(node->right);
-            node->value = temp->key;
-            node->right = removeNode(node->right, temp->key, temp->value);
-        }
-        return node;
-    }*/ // if it need to work by value
-
     void inorderNode(Node<KeyType, ValueType>* node) {
         if (node != nullptr) {
             inorderNode(node->left);
@@ -569,3 +527,214 @@ public:
 
 };
 
+template <typename KeyType, typename ValueType>
+class AVLTree {
+private:
+    NodeAVL<KeyType, ValueType>* root;
+    int size;
+public:
+    AVLTree() : root{ nullptr }, size{ 0 } {}
+
+    ~AVLTree() {}
+
+    void insert(const KeyType& key, ValueType value) {
+        root = insertNode(root, key, value);
+        size++;
+    }
+
+    int sizeTree() {
+        int _size = size;
+        return _size;
+    }
+
+    void remove(const KeyType& key) {
+        removeNode(root, key);
+        size--;
+    }
+
+    AVLTreeIterator<KeyType, ValueType> find(KeyType key) const {
+        NodeAVL<KeyType, ValueType>* node = root;
+        while (node->key != key) {
+            if (key <= node->key && node->left != nullptr) {
+                node = node->left;
+            }
+            else if (key > node->key && node->right != nullptr) {
+                node = node->right;
+            }
+            else {
+                throw "Invalid value";
+            }
+        }
+        return AVLTreeIterator<KeyType, ValueType>(node);
+    }
+
+    AVLTreeIterator<KeyType, ValueType> begin() const {
+        NodeAVL<KeyType, ValueType>* node = root;
+        while (node->left != nullptr) {
+            node = node->left;
+        }
+        return AVLTreeIterator<KeyType, ValueType>(node);
+    }
+
+    AVLTreeIterator<KeyType, ValueType> end() const {
+        NodeAVL<KeyType, ValueType>* node = root;
+        while (node->right != nullptr) {
+            node = node->right;
+        }
+        return AVLTreeIterator<KeyType, ValueType>(node);
+    }
+
+    NodeAVL<KeyType, ValueType>* minValueNode(NodeAVL<KeyType, ValueType>* node) {
+        NodeAVL<KeyType, ValueType>* current = node;
+        while (current && current->left != nullptr) {
+            current = current->left;
+        }
+        return current;
+    }
+
+    NodeAVL<KeyType, ValueType>* maxValueNode(NodeAVL<KeyType, ValueType>* node) {
+        NodeAVL<KeyType, ValueType>* current = node;
+        while (current && current->right != nullptr) {
+            current = current->right;
+        }
+        return current;
+    }
+
+    NodeAVL<KeyType, ValueType>* balance(NodeAVL<KeyType, ValueType>* node) {
+        int balance = getBalance(node);
+        if (balance > 1) {
+            if (getBalance(node->left) < 0) {
+                node->left = bigLeftRotate(node->left);
+            }
+            return bigRightRotate(node);
+        }
+        else if (balance < -1) {
+            if (getBalance(node->right) > 0) {
+                node->right = bigRightRotate(node->right);
+            }
+            return bigLeftRotate(node);
+        }
+        return node;
+    }
+
+    NodeAVL<KeyType, ValueType>* insertNode(NodeAVL<KeyType, ValueType>* node, KeyType key, ValueType value) {
+        if (node == nullptr) {
+            return new NodeAVL<KeyType, ValueType>(key, value);
+        }
+        if (key <= node->key) {
+            node->left = insertNode(node->left, key, value);
+            node->left->parent = node;
+        }
+        if (key > node->key) {
+            node->right = insertNode(node->right, key, value);
+            node->right->parent = node;
+        }
+        node->height = 1 + std::max(getHeight(node->left), getHeight(node->right));
+        return balance(node);
+    }
+
+    void removeNode(NodeAVL<KeyType, ValueType>*& node, const KeyType& key) {
+        if (node == nullptr) {
+            return;
+        }
+        if (key < node->key) {
+            return removeNode(node->left, key);
+        }
+        else if (key > node->key) {
+            return removeNode(node->right, key);
+        }
+        else {
+            if (node->left == nullptr && node->right == nullptr) {
+                NodeAVL<KeyType, ValueType>* parent = node->parent;
+                node = nullptr;
+                parent->height = 1 + std::max(getHeight(parent->left), getHeight(parent->right));
+                balance(root);
+            }
+            else if (node->left == nullptr) {
+                NodeAVL<KeyType, ValueType>* temp = node;
+                node = node->right;
+                node->parent = temp->parent;
+                delete temp;
+                node->height = 1 + std::max(getHeight(node->left), getHeight(node->right));
+                balance(root);
+            }
+            else if (node->right == nullptr) {
+                NodeAVL<KeyType, ValueType>* temp = node;
+                node = node->left;
+                node->parent = temp->parent;
+                delete temp;
+                node->height = 1 + std::max(getHeight(node->left), getHeight(node->right));
+                balance(root);
+            }
+            else {
+                NodeAVL<KeyType, ValueType>* temp = minValueNode(node->right);
+                node->key = temp->key;
+                node->value = temp->value;
+                return removeNode(node->right, temp->key);
+            }
+        }
+    }
+
+
+    NodeAVL<KeyType, ValueType>* operator->() {
+        return this->root;
+    }
+
+    int getHeight(NodeAVL<KeyType, ValueType>* node) {
+        if (node == nullptr) {
+            return 0;
+        }
+        return node->height;
+    }
+
+    int getBalance(NodeAVL<KeyType, ValueType>* node) {
+        if (node == nullptr) {
+            return 0;
+        }
+        return getHeight(node->left) - getHeight(node->right);
+    }
+
+    NodeAVL<KeyType, ValueType>* rightRotate(NodeAVL<KeyType, ValueType>* y) {
+        NodeAVL<KeyType, ValueType>* x = y->left;
+        NodeAVL<KeyType, ValueType>* T2 = x->right;
+        y->left = T2;
+        if (x->right != nullptr) {
+            x->right->parent = y;
+        }
+        x->right = y;
+        y->parent = x;
+        x->parent = y->parent;
+        y->height = 1 + std::max(getHeight(y->left), getHeight(y->right));
+        x->height = 1 + std::max(getHeight(x->left), getHeight(x->right));
+
+        return x;
+    }
+
+    NodeAVL<KeyType, ValueType>* leftRotate(NodeAVL<KeyType, ValueType>* x) {
+        NodeAVL<KeyType, ValueType>* y = x->right;
+        NodeAVL<KeyType, ValueType>* T2 = y->left;
+        x->right = T2;
+        if (y->left != nullptr) {
+            y->left->parent = x;
+        }
+        y->left = x;
+        x->parent = y;
+        y->parent = x->parent;
+        x->height = 1 + std::max(getHeight(x->left), getHeight(x->right));
+        y->height = 1 + std::max(getHeight(y->left), getHeight(y->right));
+
+        return y;
+    }
+
+    NodeAVL<KeyType, ValueType>* bigRightRotate(NodeAVL<KeyType, ValueType>* node) {
+        NodeAVL<KeyType, ValueType>* x = node->left;
+        node->left = rightRotate(x);
+        return leftRotate(node);
+    }
+
+    NodeAVL<KeyType, ValueType>* bigLeftRotate(NodeAVL<KeyType, ValueType>* node) {
+        NodeAVL<KeyType, ValueType>* y = node->right;
+        node->right = leftRotate(y);
+        return rightRotate(node);
+    }
+};
