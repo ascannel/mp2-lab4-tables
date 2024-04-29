@@ -499,12 +499,12 @@ public:
         else {
             if (node->left == nullptr) {
                 Node<KeyType, ValueType>* temp = node->right;
-                delete node;
+                node = nullptr;
                 return temp;
             }
             else if (node->right == nullptr) {
                 Node<KeyType, ValueType>* temp = node->left;
-                delete node;
+                node = nullptr;
                 return temp;
             }
             Node<KeyType, ValueType>* temp = minValueNode(node->right);
@@ -603,16 +603,26 @@ public:
     NodeAVL<KeyType, ValueType>* balance(NodeAVL<KeyType, ValueType>* node) {
         int balance = getBalance(node);
         if (balance > 1) {
-            if (getBalance(node->left) < 0) {
-                node->left = bigLeftRotate(node->left);
+            if (node->right == nullptr) {
+                node = rightRotate(node);
             }
-            return bigRightRotate(node);
+            else {
+                if (getBalance(node->left) < 0) {
+                    node = leftRotate(node);
+                }
+                return bigRightRotate(node);
+            }
         }
         else if (balance < -1) {
-            if (getBalance(node->right) > 0) {
-                node->right = bigRightRotate(node->right);
+            if (node->left == nullptr) {
+                node = leftRotate(node);
             }
-            return bigLeftRotate(node);
+            else {
+                if (getBalance(node->right) > 0) {
+                    node = rightRotate(node);
+                }
+                return bigLeftRotate(node);
+            }
         }
         return node;
     }
@@ -696,11 +706,11 @@ public:
 
     NodeAVL<KeyType, ValueType>* rightRotate(NodeAVL<KeyType, ValueType>* y) {
         NodeAVL<KeyType, ValueType>* x = y->left;
-        NodeAVL<KeyType, ValueType>* T2 = x->right;
-        y->left = T2;
         if (x->right != nullptr) {
             x->right->parent = y;
         }
+        NodeAVL<KeyType, ValueType>* T2 = x->right;
+        y->left = T2;
         x->right = y;
         y->parent = x;
         x->parent = y->parent;
@@ -727,14 +737,14 @@ public:
     }
 
     NodeAVL<KeyType, ValueType>* bigRightRotate(NodeAVL<KeyType, ValueType>* node) {
-        NodeAVL<KeyType, ValueType>* x = node->left;
-        node->left = rightRotate(x);
+        NodeAVL<KeyType, ValueType>* x = node;
+        node = rightRotate(x);
         return leftRotate(node);
     }
 
     NodeAVL<KeyType, ValueType>* bigLeftRotate(NodeAVL<KeyType, ValueType>* node) {
-        NodeAVL<KeyType, ValueType>* y = node->right;
-        node->right = leftRotate(y);
+        NodeAVL<KeyType, ValueType>* y = node;
+        node = leftRotate(y);
         return rightRotate(node);
     }
 };
