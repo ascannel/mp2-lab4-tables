@@ -1,4 +1,4 @@
-#include <gtest.h>
+#include "gtest/gtest.h"
 #include <table.hpp>
 #include <random>
 
@@ -321,6 +321,108 @@ TEST(BinaryTree, can_insert_random_values) {
 	for (int i = 0; i < 100; i++) {
 		EXPECT_EQ(tree.find(i)->value, 1);
 	}
+}
+
+TEST(AVLTreeTest, can_insert_and_find) {
+    AVLTree<int, int> avl;
+    avl.insert(10, 100);
+    avl.insert(20, 200);
+    avl.insert(30, 300);
+
+    EXPECT_EQ(avl.sizeTree(), 3);
+    
+    AVLTreeIterator<int, int> it = avl.find(20);
+    EXPECT_EQ(it->key, 20);
+    EXPECT_EQ(it->value, 200);
+
+    EXPECT_THROW(avl.find(40), const char*);
+}
+
+TEST(AVLTreeTest, can_it_remove) {
+    AVLTree<int, int> avl;
+    avl.insert(10, 100);
+    avl.insert(20, 200);
+    avl.insert(30, 300);
+
+    EXPECT_EQ(avl.sizeTree(), 3);
+
+    avl.remove(20);
+    EXPECT_EQ(avl.sizeTree(), 2);
+
+    EXPECT_THROW(avl.find(20), const char*);
+}
+
+TEST(AVLTreeTest, can_it_get_begin_and_end) {
+    AVLTree<int, int> avl;
+    avl.insert(10, 100);
+    avl.insert(20, 200);
+    avl.insert(30, 300);
+
+    AVLTreeIterator<int, int> it_begin = avl.begin();
+    EXPECT_EQ(it_begin->key, 10);
+    EXPECT_EQ(it_begin->value, 100);
+
+    AVLTreeIterator<int, int> it_end = avl.end();
+    EXPECT_EQ(it_end->key, 30);
+    EXPECT_EQ(it_end->value, 300);
+}
+
+TEST(AVLTreeTest, can_it_get_height_and_balance) {
+    AVLTree<int, int> avl;
+    avl.insert(10, 100);
+    avl.insert(20, 200);
+    avl.insert(30, 300);
+    avl.insert(5, 50);
+    avl.insert(25, 250);
+    avl.insert(35, 350);
+    
+    EXPECT_EQ(avl.getHeight(avl->left), 1);
+    EXPECT_EQ(avl.getHeight(avl->right), 2);
+    
+    EXPECT_EQ(avl.getBalance(avl->left), -1);
+    EXPECT_EQ(avl.getBalance(avl->right), 1);
+}
+
+TEST(AVLTreeTest, can_bigLeftRotate) {
+    AVLTree<int, int> avl;
+    avl.insert(10, 100);
+    avl.insert(20, 200);
+    avl.insert(30, 300);
+    
+    EXPECT_EQ(avl.getHeight(avl->right), 1);
+    
+    avl.insert(25, 250);
+    avl.insert(35, 350);
+
+    EXPECT_EQ(avl.getHeight(avl->right), 2);
+    EXPECT_EQ(avl.getHeight(avl->right->left), 1);
+    EXPECT_EQ(avl.getHeight(avl->right->right), 1);
+
+    avl.remove(20);
+    EXPECT_EQ(avl.getHeight(avl->right), 1);
+    EXPECT_EQ(avl.getHeight(avl->right->left), 1);
+    EXPECT_EQ(avl.getHeight(avl->right->right), 1);
+}
+
+TEST(AVLTreeTest, can_bigRightRotate) {
+    AVLTree<int, int> avl;
+    avl.insert(30, 300);
+    avl.insert(20, 200);
+    avl.insert(10, 100);
+    
+    EXPECT_EQ(avl.getHeight(avl->left), 1);
+    
+    avl.insert(25, 250);
+    avl.insert(5, 50);
+
+    EXPECT_EQ(avl.getHeight(avl->left), 2);
+    EXPECT_EQ(avl.getHeight(avl->left->left), 1);
+    EXPECT_EQ(avl.getHeight(avl->left->right), 1);
+
+    avl.remove(20);
+    EXPECT_EQ(avl.getHeight(avl->left), 1);
+    EXPECT_EQ(avl.getHeight(avl->left->left), 1);
+    EXPECT_EQ(avl.getHeight(avl->left->right), 1);
 }
 
 TEST(AVLTree, can_insert) {
