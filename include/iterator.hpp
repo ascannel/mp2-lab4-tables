@@ -120,7 +120,7 @@ public:
     NodeAVL* left;
     NodeAVL* right;
     NodeAVL* parent;
-    int height; // новое поле для AVL дерева
+    int height; // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ AVL пїЅпїЅпїЅпїЅпїЅпїЅ
 
     NodeAVL(KeyType key, ValueType value) : key{ key }, value{ value }, left{ nullptr }, right{ nullptr }, parent{ nullptr }, height{ 1 } {}
 };
@@ -166,6 +166,68 @@ public:
     }
 
     bool operator!=(const AVLTreeIterator& other) const {
+        return current != other.current;
+    }
+};
+
+template <typename KeyType, typename ValueType>
+struct NodeRB {
+public:
+    KeyType key;
+    ValueType value;
+    NodeRB* left;
+    NodeRB* right;
+    NodeRB* parent;
+    bool is_red;
+
+    NodeRB(KeyType key, ValueType value, bool is_red = true)
+        : key{ key }, value{ value }, left{ nullptr }, right{ nullptr }, parent{ nullptr }, is_red{ is_red } {}
+};
+
+template <typename KeyType, typename ValueType>
+class RBTreeIterator {
+private:
+    NodeRB<KeyType, ValueType>* current;
+
+    NodeRB<KeyType, ValueType>* belowNode(NodeRB<KeyType, ValueType>* node) const {
+        if (node->right != nullptr) {
+            return minHelper(node->right);
+        }
+
+        NodeRB<KeyType, ValueType>* parent = node->parent;
+        while (parent != nullptr && node == parent->right) {
+            node = parent;
+            parent = parent->parent;
+        }
+
+        return parent;
+    }
+
+    NodeRB<KeyType, ValueType>* minHelper(NodeRB<KeyType, ValueType>* node) const {
+        if (node->left == nullptr) {
+            return node;
+        }
+        else {
+            return minHelper(node->left);
+        }
+    }
+
+public:
+    RBTreeIterator(NodeRB<KeyType, ValueType>* node) { current = node; }
+
+    ValueType& operator*() { return current->value; }
+    NodeRB<KeyType, ValueType>* operator->() { return current; }
+
+    RBTreeIterator& operator++() {
+        current = belowNode(current);
+        return *this;
+    }
+
+    bool operator==(const RBTreeIterator& other) const {
+        return current == other.current;
+    }
+
+    bool operator!=(const RBTreeIterator& other) const {
         return current != other.current;
     }
 };

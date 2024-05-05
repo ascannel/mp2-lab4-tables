@@ -538,15 +538,288 @@ TEST(Binary_and_AVL_Trees, time_insert_random_values) {
 	}
 	auto t_end_find_avl = std::chrono::high_resolution_clock::now();
 
+	auto t_start_remove_bin = std::chrono::high_resolution_clock::now();
+	for (int i = 0; i < N; i++) {
+		tree.remove(randRemove[i]);
+	}
+	auto t_end_remove_bin = std::chrono::high_resolution_clock::now();
+
+	auto t_start_remove_avl = std::chrono::high_resolution_clock::now();
+	for (int i = 0; i < N; i++) {
+		avl.remove(randRemove[i]);
+	}
+	auto t_end_remove_avl = std::chrono::high_resolution_clock::now();
+
 	double insert_bin_elapsed_time_ms = std::chrono::duration<double, std::milli>(t_end_insert_bin - t_start_insert_bin).count();
 	double insert_avl_elapsed_time_ms = std::chrono::duration<double, std::milli>(t_end_insert_avl - t_start_insert_avl).count();
 	double find_bin_elapsed_time_ms = std::chrono::duration<double, std::milli>(t_end_find_bin - t_start_find_bin).count();
 	double find_avl_elapsed_time_ms = std::chrono::duration<double, std::milli>(t_end_find_avl - t_start_find_avl).count();
+	double remove_bin_elapsed_time_ms = std::chrono::duration<double, std::milli>(t_end_remove_bin - t_start_remove_bin).count();
+	double remove_avl_elapsed_time_ms = std::chrono::duration<double, std::milli>(t_end_remove_avl - t_start_remove_avl).count();
 	double ratio_insert = insert_avl_elapsed_time_ms / insert_bin_elapsed_time_ms;
 	double ratio_find = find_avl_elapsed_time_ms / find_bin_elapsed_time_ms;
+	double ratio_remove = remove_avl_elapsed_time_ms / remove_bin_elapsed_time_ms;
 
 	std::cout << "Insertions time: binary tree: " << insert_bin_elapsed_time_ms << ", avl tree: " << insert_avl_elapsed_time_ms << std::endl;
 	std::cout << "Binary tree is faster in " << ratio_insert << " times" << std::endl;
 	std::cout << "Find time: binary tree: " << find_bin_elapsed_time_ms << ", avl tree: " << find_avl_elapsed_time_ms << std::endl;
 	std::cout << "Binary tree is faster in " << ratio_find << " times" << std::endl;
+	std::cout << "Remove time: binary tree: " << remove_bin_elapsed_time_ms << ", avl tree: " << remove_avl_elapsed_time_ms << std::endl;
+	std::cout << "Binary tree is faster in " << ratio_remove << " times" << std::endl;
+}
+
+TEST(RBTree, can_insert_and_find) {
+    RBTree<int, int> rbTree;
+    rbTree.insert(10, 10);
+    rbTree.insert(20, 20);
+    rbTree.insert(30, 30);
+    rbTree.insert(5, 5);
+    rbTree.insert(15, 15);
+    rbTree.insert(25, 25);
+    rbTree.insert(35, 35);
+
+    EXPECT_EQ(rbTree.find(10)->value, 10);
+    EXPECT_EQ(rbTree.find(20)->value, 20);
+    EXPECT_EQ(rbTree.find(30)->value, 30);
+    EXPECT_EQ(rbTree.find(5)->value, 5);
+    EXPECT_EQ(rbTree.find(15)->value, 15);
+    EXPECT_EQ(rbTree.find(25)->value, 25);
+    EXPECT_EQ(rbTree.find(35)->value, 35);
+}
+
+TEST(RBTree, can_get_size) {
+    RBTree<int, int> rbTree;
+    rbTree.insert(10, 10);
+    rbTree.insert(20, 20);
+    rbTree.insert(30, 30);
+    rbTree.insert(5, 5);
+    rbTree.insert(15, 15);
+    rbTree.insert(25, 25);
+    rbTree.insert(35, 35);
+
+    EXPECT_EQ(rbTree.sizeTree(), 7);
+
+    rbTree.remove(15);
+    rbTree.remove(35);
+
+    EXPECT_EQ(rbTree.sizeTree(), 5);
+}
+
+TEST(RBTree, can_remove) {
+    RBTree<int, int> rbTree;
+    rbTree.insert(10, 10);
+    rbTree.insert(20, 20);
+    rbTree.insert(30, 30);
+    rbTree.insert(5, 5);
+    rbTree.insert(15, 15);
+    rbTree.insert(25, 25);
+    rbTree.insert(35, 35);
+
+    rbTree.remove(15);
+    rbTree.remove(35);
+
+    EXPECT_EQ(rbTree.find(15), nullptr);
+    EXPECT_EQ(rbTree.find(35), nullptr);
+    EXPECT_EQ(rbTree.sizeTree(), 5);
+}
+
+TEST(RBTree, can_get_begin_and_end) {
+    RBTree<int, int> rbTree;
+    rbTree.insert(10, 10);
+    rbTree.insert(20, 20);
+    rbTree.insert(30, 30);
+    rbTree.insert(5, 5);
+    rbTree.insert(15, 15);
+    rbTree.insert(25, 25);
+    rbTree.insert(35, 35);
+
+    auto it = rbTree.begin();
+    EXPECT_EQ(it->value, 5);
+
+    it = rbTree.end();
+    EXPECT_EQ(it->value, 35);
+}
+
+TEST(RBTree, iterator_works) {
+	RBTree<int, std::string> tree;
+	tree.insert(5, "five");
+	tree.insert(3, "three");
+	tree.insert(7, "seven");
+
+	RBTreeIterator<int, std::string> it = tree.begin();
+	EXPECT_EQ((*it), "three");
+	++it;
+	EXPECT_EQ((*it), "five");
+	RBTreeIterator<int, std::string> it_end = tree.end();
+	EXPECT_EQ((*it_end), "seven");
+}
+
+TEST(RBTree, iterator_works_with_changes_in_values) {
+	RBTree<int, int> tree;
+	tree.insert(5, 5);
+	tree.insert(3, 3);
+	tree.insert(7, 7);
+
+	RBTreeIterator<int, int> it = tree.begin();
+	it->value += 1;
+	EXPECT_EQ((*it), 4);
+	++it;
+	it->value += 1;
+	EXPECT_EQ((*it), 6);
+	++it;
+	it->value += 1;
+	EXPECT_EQ((*it), 8);
+}
+
+TEST(RBTree, can_insert_random_values) {
+	RBTree<int, int> tree;
+	std::vector<int> randNums;
+	for (int i = 0; i < 1000; i++) {
+		randNums.push_back(i);
+	}
+
+	for (int i = 0; i < 1000; i++) {
+		int ind = rand() % randNums.size();
+		tree.insert(randNums[ind], 1);
+		std::swap(randNums[ind], randNums[randNums.size() - 1]);
+		randNums.pop_back();
+	}
+	for (int i = 0; i < 1000; i++) {
+		EXPECT_EQ(tree.find(i)->value, 1);
+	}
+}
+
+TEST(RBTree, can_insert_and_remove_random_values) {
+	RBTree<int, int> tree;
+	std::vector<int> randNums;
+	std::vector<int> randRem;
+	srand(0);
+	for (int i = 0; i < 1000; i++) {
+		randNums.push_back(i);
+		randRem.push_back(i);
+	}
+
+	for (int i = 0; i < 1000; i++) {
+		int ind = rand() % randNums.size();
+		tree.insert(randNums[ind], 1);
+		std::swap(randNums[ind], randNums[randNums.size() - 1]);
+		randNums.pop_back();
+	}
+	for (int i = 0; i < 1000; i++) {
+		EXPECT_EQ(tree.find(i)->value, 1);
+	}
+	for (int i = 0; i < 1000; i++) {
+		int ind = rand() % randRem.size();
+		tree.remove(randRem[ind]);
+		std::swap(randRem[ind], randRem[randRem.size() - 1]);
+		randRem.pop_back();
+		EXPECT_EQ(tree.sizeTree(), 999-i);
+	}
+	EXPECT_EQ(tree.sizeTree(), 0);
+}
+
+TEST(RBTree, iterator_works_with_changes_in_values_big_tree) {
+	RBTree<int, int> tree;
+	for (int i = 0; i < 1000; i++) {
+		tree.insert(i, i);
+	}
+
+	RBTreeIterator<int, int> it = tree.begin();
+	for (int i = 0; i < 1000; i++) {
+		it->value += 1;
+		++it;
+	}
+	RBTreeIterator<int, int> check = tree.begin();
+	for (int i = 0; i < 1000; i++) {
+		EXPECT_EQ((*check), i + 1);
+		++check;
+	}
+
+}
+
+TEST(Binary_and_AVL_Trees_and_RBTree, time_insert_random_values) {
+	RBTree<int,int> rb;
+	AVLTree<int, int> avl;
+	BinaryTree<int, int> tree;
+	const int N = 1000;
+	std::vector<int> randInsert(N);
+	std::vector<int> randRemove(N);
+	std::iota(randInsert.begin(), randInsert.end(), 0);
+	std::iota(randRemove.begin(), randRemove.end(), 0);
+	std::mt19937 g(0);
+	std::shuffle(randInsert.begin(), randInsert.end(), g);
+	std::shuffle(randRemove.begin(), randRemove.end(), g);
+	auto t_start_insert_bin = std::chrono::high_resolution_clock::now();
+	for (int i = 0; i < N; i++) {
+		tree.insert(randInsert[i], 1);
+	}
+	auto t_end_insert_bin = std::chrono::high_resolution_clock::now();
+
+	auto t_start_insert_avl = std::chrono::high_resolution_clock::now();
+	for (int i = 0; i < N; i++) {
+		avl.insert(randInsert[i], 1);
+	}
+	auto t_end_insert_avl = std::chrono::high_resolution_clock::now();
+
+	auto t_start_insert_rb = std::chrono::high_resolution_clock::now();
+	for (int i = 0; i < N; i++) {
+		rb.insert(randInsert[i], 1);
+	}
+	auto t_end_insert_rb = std::chrono::high_resolution_clock::now();
+
+	auto t_start_find_bin = std::chrono::high_resolution_clock::now();
+	for (int i = 0; i < N; i++) {
+		EXPECT_EQ(tree.find(i)->value, 1);
+	}
+	auto t_end_find_bin = std::chrono::high_resolution_clock::now();
+
+	auto t_start_find_avl = std::chrono::high_resolution_clock::now();
+	for (int i = 0; i < N; i++) {
+		EXPECT_EQ(avl.find(i)->value, 1);
+	}
+	auto t_end_find_avl = std::chrono::high_resolution_clock::now();
+
+	auto t_start_find_rb = std::chrono::high_resolution_clock::now();
+	for (int i = 0; i < N; i++) {
+		EXPECT_EQ(rb.find(i)->value, 1);
+	}
+	auto t_end_find_rb = std::chrono::high_resolution_clock::now();
+
+	auto t_start_remove_bin = std::chrono::high_resolution_clock::now();
+	for (int i = 0; i < N; i++) {
+		tree.remove(randRemove[i]);
+	}
+	auto t_end_remove_bin = std::chrono::high_resolution_clock::now();
+
+	auto t_start_remove_avl = std::chrono::high_resolution_clock::now();
+	for (int i = 0; i < N; i++) {
+		avl.remove(randRemove[i]);
+	}
+	auto t_end_remove_avl = std::chrono::high_resolution_clock::now();
+
+	auto t_start_remove_rb = std::chrono::high_resolution_clock::now();
+	for (int i = 0; i < N; i++) {
+		rb.remove(randRemove[i]);
+	}
+	auto t_end_remove_rb = std::chrono::high_resolution_clock::now();
+
+	double insert_bin_elapsed_time_ms = std::chrono::duration<double, std::milli>(t_end_insert_bin - t_start_insert_bin).count();
+	double insert_avl_elapsed_time_ms = std::chrono::duration<double, std::milli>(t_end_insert_avl - t_start_insert_avl).count();
+	double insert_rb_elapsed_time_ms = std::chrono::duration<double, std::milli>(t_end_insert_rb - t_start_insert_rb).count();
+	double find_bin_elapsed_time_ms = std::chrono::duration<double, std::milli>(t_end_find_bin - t_start_find_bin).count();
+	double find_avl_elapsed_time_ms = std::chrono::duration<double, std::milli>(t_end_find_avl - t_start_find_avl).count();
+	double find_rb_elapsed_time_ms = std::chrono::duration<double, std::milli>(t_end_find_rb - t_start_find_rb).count();
+	double remove_bin_elapsed_time_ms = std::chrono::duration<double, std::milli>(t_end_remove_bin - t_start_remove_bin).count();
+	double remove_avl_elapsed_time_ms = std::chrono::duration<double, std::milli>(t_end_remove_avl - t_start_remove_avl).count();
+	double remove_rb_elapsed_time_ms = std::chrono::duration<double, std::milli>(t_end_remove_rb - t_start_remove_rb).count();
+	//double ratio_insert = insert_avl_elapsed_time_ms / insert_bin_elapsed_time_ms;
+	//double ratio_find = find_avl_elapsed_time_ms / find_bin_elapsed_time_ms;
+	//double ratio_remove = remove_avl_elapsed_time_ms / remove_bin_elapsed_time_ms;
+
+	std::cout << "Insertions time: binary tree: " << insert_bin_elapsed_time_ms << ", avl tree: " << insert_avl_elapsed_time_ms << ", rb tree" << insert_rb_elapsed_time_ms <<std::endl;
+	//std::cout << "Binary tree is faster in " << ratio_insert << " times" << std::endl;
+	std::cout << "Find time: binary tree: " << find_bin_elapsed_time_ms << ", avl tree: " << find_avl_elapsed_time_ms << ", rb tree" << find_rb_elapsed_time_ms << std::endl;
+	//std::cout << "Binary tree is faster in " << ratio_find << " times" << std::endl;
+	std::cout << "Remove time: binary tree: " << remove_bin_elapsed_time_ms << ", avl tree: " << remove_avl_elapsed_time_ms << ", rb tree" << remove_rb_elapsed_time_ms << std::endl;
+	//std::cout << "Binary tree is faster in " << ratio_remove << " times" << std::endl;
 }
