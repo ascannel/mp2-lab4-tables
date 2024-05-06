@@ -760,279 +760,44 @@ template <typename KeyType, typename ValueType>
 class RBTree {
 private:
     NodeRB<KeyType, ValueType>* root;
-
-    void leftRotate(NodeRB<KeyType, ValueType>* x) {
-        NodeRB<KeyType, ValueType>* y = x->right;
-        x->right = y->left;
-        if (y->left != nullptr) {
-            y->left->parent = x;
-        }
-        y->parent = x->parent;
-        if (x->parent == nullptr) {
-            root = y;
-        }
-        else if (x == x->parent->left) {
-            x->parent->left = y;
-        }
-        else {
-            x->parent->right = y;
-        }
-        y->left = x;
-        x->parent = y;
-    }
-
-    void rightRotate(NodeRB<KeyType, ValueType>* y) {
-        NodeRB<KeyType, ValueType>* x = y->left;
-        y->left = x->right;
-        if (x->right != nullptr) {
-            x->right->parent = y;
-        }
-        x->parent = y->parent;
-        if (y->parent == nullptr) {
-            root = x;
-        }
-        else if (y == y->parent->right) {
-            y->parent->right = x;
-        }
-        else {
-            y->parent->left = x;
-        }
-        x->right = y;
-        y->parent = x;
-    }
-
-    void insertFixup(NodeRB<KeyType, ValueType>* z) {
-        while (z != root && z->parent->is_red) {
-            if (z->parent == z->parent->parent->left) {
-                NodeRB<KeyType, ValueType>* y = z->parent->parent->right;
-                if (y != nullptr && y->is_red) {
-                    z->parent->is_red = false;
-                    y->is_red = false;
-                    z->parent->parent->is_red = true;
-                    z = z->parent->parent;
-                }
-                else {
-                    if (z == z->parent->right) {
-                        z = z->parent;
-                        leftRotate(z);
-                    }
-                    z->parent->is_red = false;
-                    z->parent->parent->is_red = true;
-                    rightRotate(z->parent->parent);
-                }
-            }
-            else {
-                NodeRB<KeyType, ValueType>* y = z->parent->parent->left;
-                if (y != nullptr && y->is_red) {
-                    z->parent->is_red = false;
-                    y->is_red = false;
-                    z->parent->parent->is_red = true;
-                    z = z->parent->parent;
-                }
-                else {
-                    if (z == z->parent->left) {
-                        z = z->parent;
-                        rightRotate(z);
-                    }
-                    z->parent->is_red = false;
-                    z->parent->parent->is_red = true;
-                    leftRotate(z->parent->parent);
-                }
-            }
-        }
-        root->is_red = false;
-    }
-
-    void transplant(NodeRB<KeyType, ValueType>* u, NodeRB<KeyType, ValueType>* v) {
-        if (u->parent == nullptr) {
-            root = v;
-        }
-        else if (u == u->parent->left) {
-            u->parent->left = v;
-        }
-        else {
-            u->parent->right = v;
-        }
-        if (v != nullptr) {
-            v->parent = u->parent;
-        }
-    }
-
-    NodeRB<KeyType, ValueType>* minValueNode(NodeRB<KeyType, ValueType>* node) {
-        NodeRB<KeyType, ValueType>* current = node;
-        while (current->left != nullptr) {
-            current = current->left;
-        }
-        return current;
-    }
-
-    Node<KeyType, ValueType>* findNode(Node<KeyType, ValueType>* node, KeyType key) const {
-        if (node == nullptr || node->key == key)
-            return node;
-
-        if (key < node->key)
-            return findNode(node->left, key);
-
-        return findNode(node->right, key);
-    }
-
-    void deleteFixup(NodeRB<KeyType, ValueType>* x) {
-        while (x != root && !x->is_red) {
-            if (x == x->parent->left) {
-                NodeRB<KeyType, ValueType>* w = x->parent->right;
-                if (w->is_red) {
-                    w->is_red = false;
-                    x->parent->is_red = true;
-                    leftRotate(x->parent);
-                    w = x->parent->right;
-                }
-                if (!w->left->is_red && !w->right->is_red) {
-                    w->is_red = true;
-                    x = x->parent;
-                }
-                else {
-                    if (!w->right->is_red) {
-                        w->left->is_red = false;
-                        w->is_red = true;
-                        rightRotate(w);
-                        w = x->parent->right;
-                    }
-                    w->is_red = x->parent->is_red;
-                    x->parent->is_red = false;
-                    w->right->is_red = false;
-                    leftRotate(x->parent);
-                    x = root;
-                }
-            }
-            else {
-                NodeRB<KeyType, ValueType>* w = x->parent->left;
-                if (w->is_red) {
-                    w->is_red = false;
-                    x->parent->is_red = true;
-                    rightRotate(x->parent);
-                    w = x->parent->left;
-                }
-                if (!w->right->is_red && !w->left->is_red) {
-                    w->is_red = true;
-                    x = x->parent;
-                }
-                else {
-                    if (!w->left->is_red) {
-                        w->right->is_red = false;
-                        w->is_red = true;
-                        leftRotate(w);
-                        w = x->parent->left;
-                    }
-                    w->is_red = x->parent->is_red;
-                    x->parent->is_red = false;
-                    w->left->is_red = false;
-                    rightRotate(x->parent);
-                    x = root;
-                }
-            }
-        }
-        x->is_red = false;
-    }
-
-    void deleteNode(NodeRB<KeyType, ValueType>* z) {
-        NodeRB<KeyType, ValueType>* y = z;
-        NodeRB<KeyType, ValueType>* x;
-        bool y_original_color = y->is_red;
-        if (z->left == nullptr) {
-            x = z->right;
-            transplant(z, z->right);
-        }
-        else if (z->right == nullptr) {
-            x = z->left;
-            transplant(z, z->left);
-        }
-        else {
-            y = minValueNode(z->right);
-            y_original_color = y->is_red;
-            x = y->right;
-            if (y->parent == z) {
-                if (x != nullptr) {
-                    x->parent = y;
-                }
-            }
-            else {
-                transplant(y, y->right);
-                y->right = z->right;
-                y->right->parent = y;
-            }
-            transplant(z, y);
-            y->left = z->left;
-            y->left->parent = y;
-            y->is_red = z->is_red;
-        }
-        if (!y_original_color) {
-            deleteFixup(x);
-        }
-        delete z;
-    }
-
+    int size;
 public:
-    RBTree() : root{ nullptr } {}
+    RBTree() : root{ nullptr }, size{ 0 } {}
 
-    ~RBTree() { deleteTree(root); }
+    ~RBTree() {
+        clear(root);
+    }
 
     void insert(const KeyType& key, ValueType value) {
-        NodeRB<KeyType, ValueType>* z = new NodeRB<KeyType, ValueType>(key, value);
-        NodeRB<KeyType, ValueType>* y = nullptr;
-        NodeRB<KeyType, ValueType>* x = root;
-        while (x != nullptr) {
-            y = x;
-            if (z->key < x->key) {
-                x = x->left;
-            }
-            else {
-                x = x->right;
-            }
-        }
-        z->parent = y;
-        if (y == nullptr) {
-            root = z;
-        }
-        else if (z->key < y->key) {
-            y->left = z;
-        }
-        else {
-            y->right = z;
-        }
-        z->left = nullptr;
-        z->right = nullptr;
-        z->is_red = true;
-        insertFixup(z);
+        NodeRB<KeyType, ValueType>* node = new NodeRB<KeyType, ValueType>(key, value);
+        root = insertNode(root, node);
+        root->is_red = false; // root is always black
+        size++;
     }
 
-    RBTreeIterator<KeyType, ValueType> find(const KeyType& key) const {
-        Node<KeyType, ValueType>* node = findNode(root, key);
-        return RBTreeIterator<KeyType, ValueType>(node);
+    int sizeTree() {
+        return size;
     }
 
     void remove(const KeyType& key) {
-        NodeRB<KeyType, ValueType>* z = root;
-        while (z != nullptr && z->key != key) {
-            if (key < z->key) {
-                z = z->left;
-            }
-            else {
-                z = z->right;
-            }
-        }
-        if (z != nullptr) {
-            deleteNode(z);
-        }
+        root = removeNode(root, key);
+        if (root != nullptr) root->is_red = false; // root is always black
+        size--;
     }
 
-    NodeRB<KeyType, ValueType>* getRoot() { return root; }
-
-    void deleteTree(NodeRB<KeyType, ValueType>* node) {
-        if (node != nullptr) {
-            deleteTree(node->left);
-            deleteTree(node->right);
-            delete node;
+    RBTreeIterator<KeyType, ValueType> find(KeyType key) const {
+        NodeRB<KeyType, ValueType>* node = root;
+        while (node != nullptr && node->key != key) {
+            if (key < node->key)
+                node = node->left;
+            else
+                node = node->right;
         }
+        return RBTreeIterator<KeyType, ValueType>(node);
+    }
+
+    NodeRB<KeyType, ValueType>* operator->() {
+        return this->root;
     }
 
     RBTreeIterator<KeyType, ValueType> begin() const {
@@ -1051,9 +816,116 @@ public:
         return RBTreeIterator<KeyType, ValueType>(node);
     }
 
-    int sizeTree() {
-        int _size = size;
-        return _size;
+private:
+    NodeRB<KeyType, ValueType>* insertNode(NodeRB<KeyType, ValueType>* root, NodeRB<KeyType, ValueType>* node) {
+        if (root == nullptr)
+            return node;
+
+        if (node->key < root->key) {
+            root->left = insertNode(root->left, node);
+            root->left->parent = root;
+        }
+        else if (node->key > root->key) {
+            root->right = insertNode(root->right, node);
+            root->right->parent = root;
+        }
+
+        if (isRed(root->right) && !isRed(root->left))
+            root = rotateLeft(root);
+
+        if (isRed(root->left) && isRed(root->left->left))
+            root = rotateRight(root);
+
+        if (isRed(root->left) && isRed(root->right))
+            flipColors(root);
+
+        return root;
+    }
+
+    NodeRB<KeyType, ValueType>* removeNode(NodeRB<KeyType, ValueType>* root, const KeyType& key) {
+        if (root == nullptr)
+            return nullptr;
+
+        if (key < root->key) {
+            root->left = removeNode(root->left, key);
+        }
+        else if (key > root->key) {
+            root->right = removeNode(root->right, key);
+        }
+        else {
+            if (root->left == nullptr) {
+                NodeRB<KeyType, ValueType>* temp = root->right;
+                delete root;
+                return temp;
+            }
+            else if (root->right == nullptr) {
+                NodeRB<KeyType, ValueType>* temp = root->left;
+                delete root;
+                return temp;
+            }
+
+            NodeRB<KeyType, ValueType>* temp = minValueNode(root->right);
+            root->key = temp->key;
+            root->value = temp->value;
+            root->right = removeNode(root->right, temp->key);
+        }
+
+        if (isRed(root->right) && !isRed(root->left))
+            root = rotateLeft(root);
+
+        if (isRed(root->left) && isRed(root->left->left))
+            root = rotateRight(root);
+
+        if (isRed(root->left) && isRed(root->right))
+            flipColors(root);
+
+        return root;
+    }
+
+    NodeRB<KeyType, ValueType>* minValueNode(NodeRB<KeyType, ValueType>* node) {
+        NodeRB<KeyType, ValueType>* current = node;
+        while (current->left != nullptr)
+            current = current->left;
+        return current;
+    }
+
+    void flipColors(NodeRB<KeyType, ValueType>* node) {
+        node->is_red = !node->is_red;
+        node->left->is_red = !node->left->is_red;
+        node->right->is_red = !node->right->is_red;
+    }
+
+    NodeRB<KeyType, ValueType>* rotateLeft(NodeRB<KeyType, ValueType>* node) {
+        NodeRB<KeyType, ValueType>* x = node->right;
+        node->right = x->left;
+        x->left = node;
+        x->is_red = node->is_red;
+        node->is_red = true;
+        return x;
+    }
+
+    NodeRB<KeyType, ValueType>* rotateRight(NodeRB<KeyType, ValueType>* node) {
+        NodeRB<KeyType, ValueType>* x = node->left;
+        node->left = x->right;
+        x->right = node;
+        x->is_red = node->is_red;
+        node->is_red = true;
+        return x;
+    }
+
+    bool isRed(NodeRB<KeyType, ValueType>* node) {
+        if (node == nullptr)
+            return false;
+        return node->is_red;
+    }
+
+    void clear(NodeRB<KeyType, ValueType>* node) {
+        if (node == nullptr)
+            return;
+        clear(node->left);
+        clear(node->right);
+        delete node;
     }
 };
+
 

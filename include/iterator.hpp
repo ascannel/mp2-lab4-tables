@@ -203,6 +203,9 @@ private:
         return parent;
     }
 
+public:
+    RBTreeIterator(NodeRB<KeyType, ValueType>* node) { current = node; }
+
     NodeRB<KeyType, ValueType>* minHelper(NodeRB<KeyType, ValueType>* node) const {
         if (node->left == nullptr) {
             return node;
@@ -211,9 +214,6 @@ private:
             return minHelper(node->left);
         }
     }
-
-public:
-    RBTreeIterator(NodeRB<KeyType, ValueType>* node) { current = node; }
 
     ValueType& operator*() { return current->value; }
     NodeRB<KeyType, ValueType>* operator->() { return current; }
