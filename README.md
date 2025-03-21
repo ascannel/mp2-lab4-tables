@@ -1,7 +1,7 @@
 # Data Structures Library in C++
 
-[![C++ Standard](https://img.shields.io/badge/C%2B%2B-17%2B-blue.svg)](https://en.cppreference.com/w/cpp/compiler_support)
-[![CMake](https://img.shields.io/badge/CMake-3.20%2B-brightgreen)](https://cmake.org)
+![C++](https://img.shields.io/badge/C%2B%2B-11%2B-blue)
+![CMake](https://img.shields.io/badge/CMake-3.20%2B-brightgreen)
 
 A comprehensive library implementing various data structures including hash tables, binary trees, AVL trees, red-black trees, and sorted/simple tables. Designed for educational and practical use cases.
 
